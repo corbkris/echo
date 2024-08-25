@@ -1,0 +1,3 @@
+/target/*
+/backend/rust/target/
+/devops/develop/postgres/pgdata/

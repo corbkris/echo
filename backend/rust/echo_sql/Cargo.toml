@@ -1,0 +1,20 @@
+[package]
+name = "echo_sql"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+tokio = { version = "1", features = ["full"] }
+
+sqlx = { version = "0.7", features = ["runtime-tokio", "postgres", "uuid", "macros", "json", "chrono" ]}
+
+
+serde = { version = "1.0", features = ["derive"] }
+
+serde_json = {version = "1.0", features = ["preserve_order"]}
+
+chrono = {version = "0.4.38", features = ["serde"]}
+

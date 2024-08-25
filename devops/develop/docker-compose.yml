@@ -1,0 +1,17 @@
+version: '3'
+services:
+  echocache:
+    image: myredis
+    ports:
+      - "6379:6379"
+  echodb:
+    image: mypostgres
+    volumes:
+      - ./postgres/pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  echorabbit:
+    image: myrabbit
+    ports:
+      - "5672:5672"
+      - "15672:15672"
