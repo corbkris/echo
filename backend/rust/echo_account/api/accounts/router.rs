@@ -1,7 +1,5 @@
-use crate::accounts::{
-    controller::{signup, Service},
-    middleware::full,
-};
+use crate::accounts::controller::{signup, Service};
+use crate::middleware::authorization::full;
 use hyper::Body;
 use routerify::{Middleware, Router};
 use std::convert::Infallible;

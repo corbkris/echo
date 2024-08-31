@@ -1,6 +1,7 @@
 use crate::accounts::{
     controller::Service as account_controller_service, router::build_account_subrouter,
 };
+use crate::middleware::authorization::Service as middleware_service;
 use echo_account::business::accounts::service::Service as account_service;
 use echo_account::business::wrapper::Wrapper;
 use hyper::Body;
@@ -20,9 +21,12 @@ impl MasterService {
 }
 pub fn build_router(service: MasterService) -> Router<Body, Infallible> {
     Router::builder()
+        .data(middleware_service::new(service.account_service.clone()))
         .scope(
             "/accounts",
-            build_account_subrouter(account_controller_service::new(service.account_service)),
+            build_account_subrouter(account_controller_service::new(
+                service.account_service.clone(),
+            )),
         )
         .build()
         .unwrap()
