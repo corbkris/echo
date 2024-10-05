@@ -19,6 +19,7 @@ mod tests {
         match db
             .insert(Account::new(
                 "".to_string(),
+                "cardboard1234".to_string(),
                 "corbin1234".to_string(),
                 "mypass".to_string(),
                 None,

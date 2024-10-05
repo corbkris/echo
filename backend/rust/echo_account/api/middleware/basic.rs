@@ -1,10 +1,7 @@
 use hyper::{Body, Request, Response, StatusCode};
-use routerify::prelude::*;
-use routerify::RequestInfo;
-use std::convert::Infallible;
+use routerify::{prelude::*, Error, RouteError};
 
-// A middleware which logs an http request.
-pub async fn logger(req: Request<Body>) -> Result<Request<Body>, Infallible> {
+pub async fn logger_handler(req: Request<Body>) -> Result<Request<Body>, Error> {
     println!(
         "{} {} {}",
         req.remote_addr(),
@@ -14,10 +11,16 @@ pub async fn logger(req: Request<Body>) -> Result<Request<Body>, Infallible> {
     Ok(req)
 }
 
-pub async fn error_handler(err: routerify::RouteError, _: RequestInfo) -> Response<Body> {
-    eprintln!("{}", err);
+pub async fn handler_error(err: RouteError) -> Response<Body> {
     Response::builder()
         .status(StatusCode::INTERNAL_SERVER_ERROR)
-        .body(Body::from(format!("Something went wrong: {}", err)))
+        .body(Body::from(err.to_string()))
         .unwrap()
+}
+
+pub async fn handler_404(_: Request<Body>) -> Result<Response<Body>, Error> {
+    Ok(Response::builder()
+        .status(StatusCode::NOT_FOUND)
+        .body(Body::from("Page Not Found"))
+        .unwrap())
 }

@@ -9,6 +9,8 @@ pub struct Account {
     #[sqlx(try_from = "Uuid")]
     #[serde(rename = "id")]
     pub id: String,
+    #[serde(rename = "username")]
+    pub username: String,
     #[serde(rename = "email")]
     pub email: String,
     #[serde(rename = "password")]
@@ -26,6 +28,7 @@ pub struct Account {
 impl Account {
     pub fn new(
         id: String,
+        username: String,
         email: String,
         password: String,
         days_active: Option<i32>,
@@ -35,6 +38,7 @@ impl Account {
     ) -> Self {
         Account {
             id,
+            username,
             email,
             password,
             days_active,

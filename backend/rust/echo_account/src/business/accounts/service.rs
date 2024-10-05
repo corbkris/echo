@@ -1,8 +1,5 @@
 use crate::caches::{account::Account as RedisAccount, redis::wrapper::EchoCache};
-use crate::queues::{
-    email::{EmailBody, EmailChannel},
-    wrapper::EchoQue,
-};
+use crate::queues::{email::EmailBody, wrapper::EchoQue};
 use crate::stores::{
     account::{Account as StoreAccount, StoreComparisonOperator, StoreConditionalOperator},
     wrapper::EchoDatabase,
@@ -26,17 +23,13 @@ impl Service {
         Service { db, cache, que }
     }
 
-    pub async fn signup(
-        &mut self,
-        channel: EmailChannel,
-        mut account: Account,
-    ) -> Result<String, String> {
-        match self.find_by_email(&account.email).await {
+    pub async fn signup(&mut self, email: String, mut password: String) -> Result<String, String> {
+        match self.find_by_email(&email).await {
             Ok(_) => return Err("email already exists".to_string()),
             Err(_) => {}
         };
 
-        account.password = match hash(account.password, DEFAULT_COST) {
+        password = match hash(password, DEFAULT_COST) {
             Ok(hashed) => hashed,
             Err(err) => return Err(err.to_string()),
         };
@@ -53,7 +46,7 @@ impl Service {
             .accounts
             .set_signup(
                 &signup_key,
-                &RedisAccount::new(&account.email, &account.password, &secret_code),
+                &RedisAccount::new(&email, &password, &secret_code),
             )
             .await
         {
@@ -64,10 +57,7 @@ impl Service {
         match self
             .que
             .emails
-            .publish_email(
-                channel,
-                &EmailBody::new(account.email, secret_code.to_string().to_string()),
-            )
+            .publish_email(&EmailBody::new(email, secret_code.to_string().to_string()))
             .await
         {
             Ok(_) => Ok(signup_key),
@@ -94,6 +84,7 @@ impl Service {
             .accounts
             .insert(StoreAccount::new(
                 "".to_string(),
+                "".to_string(),
                 account.email,
                 account.password,
                 None,
@@ -117,7 +108,16 @@ impl Service {
             .db
             .accounts
             .basic_search_single(
-                StoreAccount::new("".to_string(), email, password, None, None, None, None),
+                StoreAccount::new(
+                    "".to_string(),
+                    "".to_string(),
+                    email,
+                    password,
+                    None,
+                    None,
+                    None,
+                    None,
+                ),
                 StoreComparisonOperator::Equal,
                 StoreConditionalOperator::AND,
             )
@@ -134,6 +134,7 @@ impl Service {
             .accounts
             .basic_search_single(
                 StoreAccount::new(
+                    "".to_string(),
                     "".to_string(),
                     email.to_string(),
                     "".to_string(),
@@ -159,6 +160,7 @@ impl Service {
             .basic_search_single(
                 StoreAccount::new(
                     id.to_string(),
+                    "".to_string(),
                     "".to_string(),
                     "".to_string(),
                     None,

@@ -34,7 +34,7 @@ pub fn generate_account_token(user_id: &str) -> Result<String, &'static str> {
     Ok(signed_token)
 }
 
-pub fn verify_account_token(token: &str) -> Result<String, &'static str> {
+pub fn get_account_id_from_token(token: &str) -> Result<String, &'static str> {
     let key: Hmac<Sha256> = Hmac::new_from_slice(b"secret_key").map_err(|_e| "Invalid key")?;
 
     // Verify and deserialize into CustomClaims instead of RegisteredClaims

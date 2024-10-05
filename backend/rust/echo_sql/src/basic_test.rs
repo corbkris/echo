@@ -13,6 +13,7 @@ mod tests {
         assert_eq!(
             insert(Account::new(
                 "".to_string(),
+                "cardboard123".to_string(),
                 "corbin268".to_string(),
                 "dad".to_string(),
                 Some(5),
@@ -21,7 +22,7 @@ mod tests {
                 Some(now)
             )),
                     format!(
-            "INSERT INTO accounts (id, email, password, days_active, verified, created_at, updated_at) VALUES (uuid_generate_v4(), 'corbin268', 'dad', 5, true, '{}', '{}') RETURNING *;",
+            "INSERT INTO accounts (id, username, email, password, days_active, verified, created_at, updated_at) VALUES (uuid_generate_v4(), 'cardboard123', 'corbin268', 'dad', 5, true, '{}', '{}') RETURNING *;",
            formatted_now,
            formatted_now
         )
@@ -32,6 +33,7 @@ mod tests {
     fn test_generic_insert_nil() {
         assert_eq!(
             insert(Account::new(
+                "".to_string(),
                 "".to_string(),
                 "corbin268".to_string(),
                 "dad".to_string(),
@@ -67,6 +69,7 @@ mod tests {
                 "5".to_string(),
                 "".to_string(),
                 "".to_string(),
+                "".to_string(),
                 None,
                 None,
                 None,
@@ -84,6 +87,7 @@ mod tests {
             update(Account::new(
                 "5".to_string(),
                 "".to_string(),
+                "".to_string(),
                 "gogins".to_string(),
                 Some(7),
                 Some(true),
@@ -100,6 +104,7 @@ mod tests {
         assert_eq!(
             update(Account::new(
                 "5".to_string(),
+                "".to_string(),
                 "".to_string(),
                 "gogins".to_string(),
                 None,
@@ -121,6 +126,7 @@ mod tests {
                     "6".to_string(),
                     "".to_string(),
                     "".to_string(),
+                    "".to_string(),
                     Some(7),
                     Some(true),
                     Some(now),
@@ -140,6 +146,7 @@ mod tests {
             search(
                 Account::new(
                     "6".to_string(),
+                    "".to_string(),
                     "".to_string(),
                     "".to_string(),
                     None,

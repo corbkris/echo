@@ -22,6 +22,7 @@ mod tests {
         let account = accounts
             .insert(Account::new(
                 "".to_string(),
+                "".to_string(),
                 "corbin12345".to_string(),
                 "mypass1".to_string(),
                 Some(7),
@@ -41,6 +42,7 @@ mod tests {
         let mut accounts = common.db.accounts;
         let account = accounts
             .insert(Account::new(
+                "".to_string(),
                 "".to_string(),
                 "corbin2680".to_string(),
                 "mypass1".to_string(),
@@ -62,6 +64,7 @@ mod tests {
         let expected_account_result = accounts
             .insert(Account::new(
                 "".to_string(),
+                "".to_string(),
                 "corbin12345".to_string(),
                 "mypass1".to_string(),
                 Some(7),
@@ -77,6 +80,7 @@ mod tests {
             .basic_search_single(
                 Account::new(
                     expected_account.id.clone(),
+                    "".to_string(),
                     "".to_string(),
                     "".to_string(),
                     None,
@@ -97,6 +101,7 @@ mod tests {
             .update(Account::new(
                 actual_account.id.clone(),
                 "corbin2680".to_string(),
+                "corbin2680".to_string(),
                 "".to_string(),
                 None,
                 None,
@@ -111,6 +116,7 @@ mod tests {
             .basic_search_single(
                 Account::new(
                     actual_account.id.clone(),
+                    "".to_string(),
                     "".to_string(),
                     "".to_string(),
                     None,
@@ -131,6 +137,7 @@ mod tests {
                 actual_account.id.clone(),
                 "".to_string(),
                 "".to_string(),
+                "".to_string(),
                 None,
                 None,
                 None,
@@ -143,6 +150,7 @@ mod tests {
             .basic_search_single(
                 Account::new(
                     actual_account.id.clone(),
+                    "".to_string(),
                     "".to_string(),
                     "".to_string(),
                     None,

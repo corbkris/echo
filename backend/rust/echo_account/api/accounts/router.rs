@@ -1,14 +1,14 @@
-use crate::accounts::controller::{signup, Service};
+use crate::accounts::controller::{signup, State};
 use crate::middleware::authorization::full;
 use hyper::Body;
+use routerify::Error;
 use routerify::{Middleware, Router};
-use std::convert::Infallible;
 
-pub fn build_account_subrouter(service: Service) -> Router<Body, Infallible> {
+pub fn build_account_subrouter(service: State) -> Router<Body, Error> {
     Router::builder()
         .data(service)
         .middleware(Middleware::pre(full))
-        .get("/signup", signup)
+        .get("/signup/:email/:password", signup)
         .build()
         .unwrap()
 }

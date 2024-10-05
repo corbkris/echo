@@ -17,6 +17,8 @@ impl EmailBody {
         Self { email, code }
     }
 }
+
+#[derive(Clone)]
 pub struct EmailChannel {
     channel: RabbitChannel,
 }
@@ -24,28 +26,29 @@ pub struct EmailChannel {
 #[derive(Clone)]
 pub struct EmailQue {
     que: Que,
+    email_channel: EmailChannel,
 }
 
 impl EmailQue {
-    pub fn new(que: Que) -> Self {
-        Self { que }
+    pub async fn new(mut que: Que) -> Self {
+        let email_channel = match que.create_channel(QUE_NAME).await {
+            Ok(channel) => EmailChannel { channel },
+            Err(err) => {
+                panic!("{}", err);
+            }
+        };
+        Self { que, email_channel }
     }
 
-    pub async fn create_channel(&mut self) -> Result<EmailChannel, RabbitError> {
-        match self.que.create_channel(QUE_NAME).await {
-            Ok(channel) => Ok(EmailChannel { channel }),
-            Err(err) => Err(err),
-        }
-    }
-
-    pub async fn publish_email(
-        &mut self,
-        email_channel: EmailChannel,
-        email: &EmailBody,
-    ) -> Result<(), RabbitError> {
+    pub async fn publish_email(&mut self, email: &EmailBody) -> Result<(), RabbitError> {
         let payload = serde_json::to_string(email).unwrap();
         self.que
-            .publish_message(email_channel.channel, EXCHANGE, ROUTING_KEY, &payload)
+            .publish_message(
+                self.email_channel.channel.clone(),
+                EXCHANGE,
+                ROUTING_KEY,
+                &payload,
+            )
             .await
     }
 }

@@ -9,7 +9,7 @@ pub struct EchoQue {
 impl EchoQue {
     pub async fn new(que: Que) -> Self {
         Self {
-            emails: EmailQue::new(que), //handle error eventually
+            emails: EmailQue::new(que).await, //handle error eventually
         }
     }
 }
