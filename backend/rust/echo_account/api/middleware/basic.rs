@@ -1,7 +1,8 @@
+use crate::middleware::error::ApiError;
 use hyper::{Body, Request, Response, StatusCode};
-use routerify::{prelude::*, Error, RouteError};
+use routerify::prelude::*;
 
-pub async fn logger_handler(req: Request<Body>) -> Result<Request<Body>, Error> {
+pub async fn logger_handler(req: Request<Body>) -> Result<Request<Body>, ApiError> {
     println!(
         "{} {} {}",
         req.remote_addr(),
@@ -11,14 +12,7 @@ pub async fn logger_handler(req: Request<Body>) -> Result<Request<Body>, Error> 
     Ok(req)
 }
 
-pub async fn handler_error(err: RouteError) -> Response<Body> {
-    Response::builder()
-        .status(StatusCode::INTERNAL_SERVER_ERROR)
-        .body(Body::from(err.to_string()))
-        .unwrap()
-}
-
-pub async fn handler_404(_: Request<Body>) -> Result<Response<Body>, Error> {
+pub async fn handler_404(_: Request<Body>) -> Result<Response<Body>, ApiError> {
     Ok(Response::builder()
         .status(StatusCode::NOT_FOUND)
         .body(Body::from("Page Not Found"))

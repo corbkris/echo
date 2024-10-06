@@ -1,11 +1,14 @@
 use crate::caches::{account::Account as RedisAccount, redis::wrapper::EchoCache};
 use crate::queues::{email::EmailBody, wrapper::EchoQue};
 use crate::stores::{
-    account::{Account as StoreAccount, StoreComparisonOperator, StoreConditionalOperator},
+    account::{StoreComparisonOperator, StoreConditionalOperator},
     wrapper::EchoDatabase,
 };
 
-use crate::business::{account::Account, accounts::conversion::unmarshal};
+use crate::business::{
+    account::Account,
+    accounts::conversion::{marshal, unmarshal},
+};
 
 use bcrypt::{hash, DEFAULT_COST};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -82,16 +85,10 @@ impl Service {
         match self
             .db
             .accounts
-            .insert(StoreAccount::new(
-                "".to_string(),
-                "".to_string(),
+            .insert(marshal(Account::email_password(
                 account.email,
                 account.password,
-                None,
-                None,
-                None,
-                None,
-            ))
+            )))
             .await
         {
             Ok(account) => Ok(unmarshal(account)),
@@ -108,16 +105,7 @@ impl Service {
             .db
             .accounts
             .basic_search_single(
-                StoreAccount::new(
-                    "".to_string(),
-                    "".to_string(),
-                    email,
-                    password,
-                    None,
-                    None,
-                    None,
-                    None,
-                ),
+                marshal(Account::email_password(email, password)),
                 StoreComparisonOperator::Equal,
                 StoreConditionalOperator::AND,
             )
@@ -133,16 +121,7 @@ impl Service {
             .db
             .accounts
             .basic_search_single(
-                StoreAccount::new(
-                    "".to_string(),
-                    "".to_string(),
-                    email.to_string(),
-                    "".to_string(),
-                    None,
-                    None,
-                    None,
-                    None,
-                ),
+                marshal(Account::email(email.to_string())),
                 StoreComparisonOperator::Equal,
                 StoreConditionalOperator::Basic,
             )
@@ -158,16 +137,7 @@ impl Service {
             .db
             .accounts
             .basic_search_single(
-                StoreAccount::new(
-                    id.to_string(),
-                    "".to_string(),
-                    "".to_string(),
-                    "".to_string(),
-                    None,
-                    None,
-                    None,
-                    None,
-                ),
+                marshal(Account::id(id.to_string())),
                 StoreComparisonOperator::Equal,
                 StoreConditionalOperator::Basic,
             )

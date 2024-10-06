@@ -1,8 +1,9 @@
+use crate::middleware::error::ApiError;
 use echo_account::business::account::Account;
 use echo_account::business::accounts::service::Service as account_service;
 use echo_jwt::account::get_account_id_from_token;
 use hyper::{header::HeaderValue, Body, Request};
-use routerify::{prelude::*, Error};
+use routerify::prelude::*;
 use serde_json::{from_str, to_string};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -17,10 +18,10 @@ impl Service {
     }
 }
 
-pub async fn full(req: Request<Body>) -> Result<Request<Body>, Error> {
+pub async fn full(req: Request<Body>) -> Result<Request<Body>, ApiError> {
     let token = match req.headers().get("account_token") {
         Some(token) => token.to_str().unwrap().to_owned(),
-        None => return Err(Error::new("Nil token")),
+        None => return Err(ApiError::Generic("Nil token".into())),
     };
 
     let (parts, body) = req.into_parts();

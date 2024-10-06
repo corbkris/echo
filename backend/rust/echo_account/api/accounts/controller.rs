@@ -1,7 +1,8 @@
 use crate::accounts::acceptor::marshal_signup;
+use crate::middleware::error::ApiError;
 use echo_account::business::accounts::service::Service as account_service;
 use hyper::{Body, Request, Response};
-use routerify::{prelude::*, Error};
+use routerify::prelude::*;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -15,7 +16,7 @@ impl State {
     }
 }
 
-pub async fn signup(req: Request<Body>) -> Result<Response<Body>, Error> {
+pub async fn signup(req: Request<Body>) -> Result<Response<Body>, ApiError> {
     let (parts, body) = req.into_parts();
 
     let signup_data = marshal_signup(body).await?;
@@ -30,7 +31,7 @@ pub async fn signup(req: Request<Body>) -> Result<Response<Body>, Error> {
         .await
     {
         Ok(secret_key) => secret_key,
-        Err(_) => return Err(Error::new("Failed to sign up")),
+        Err(_) => return Err(ApiError::Generic("Failed to signup user".into())),
     };
 
     let second_signup = state
@@ -48,7 +49,7 @@ pub async fn signup(req: Request<Body>) -> Result<Response<Body>, Error> {
             println!("Second signup successful, secret key: {}", secret_key);
             // Do something with the second signup result
         }
-        Err(_) => return Err(Error::new("Failed to sign up second user")),
+        Err(_) => return Err(ApiError::Generic("Failed to signup user".into())),
     }
 
     Ok(Response::new(
