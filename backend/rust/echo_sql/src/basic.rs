@@ -1,3 +1,5 @@
+use serde_json::Value;
+
 pub trait ModelBuilder {
     fn id(&self) -> String;
     fn to_json(&self) -> serde_json::Value;
@@ -9,6 +11,15 @@ pub enum ConditonalOperator {
     OR,
     Basic,
 }
+impl ConditonalOperator {
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            ConditonalOperator::AND => "AND",
+            ConditonalOperator::OR => "OR",
+            ConditonalOperator::Basic => "",
+        }
+    }
+}
 
 pub enum ComparisonOperator {
     Equal,
@@ -19,146 +30,18 @@ pub enum ComparisonOperator {
     LessThanEqual,
     Basic,
 }
-
-//SELECT * FROM your_table WHERE condition1 AND condition2 AND condition3;
-
-pub fn search<T>(
-    model: T,
-    comparison: ComparisonOperator,
-    conditional: ConditonalOperator,
-) -> String
-where
-    T: ModelBuilder,
-{
-    let mut comparison_operator = String::from("");
-    match comparison {
-        ComparisonOperator::Equal => comparison_operator.push_str(" = "),
-        ComparisonOperator::NotEqual => comparison_operator.push_str(" != "),
-        ComparisonOperator::GreaterThan => comparison_operator.push_str(" > "),
-        ComparisonOperator::GreaterThanEqual => comparison_operator.push_str(" >= "),
-        ComparisonOperator::LessThan => comparison_operator.push_str(" < "),
-        ComparisonOperator::LessThanEqual => comparison_operator.push_str(" <= "),
-        ComparisonOperator::Basic => comparison_operator.push_str(" "),
-    }
-
-    let mut conditional_operator = String::from("");
-    match conditional {
-        ConditonalOperator::AND => conditional_operator.push_str(" AND "),
-        ConditonalOperator::OR => conditional_operator.push_str(" OR "),
-        ConditonalOperator::Basic => conditional_operator.push_str(" "),
-    }
-
-    let mut query = format!("SELECT * FROM {}", model.table_name());
-
-    if model.to_json().as_object().unwrap().values().all(|value| {
-        if value == "" {
-            true
-        } else if value.is_null() {
-            true
-        } else {
-            false
-        }
-    }) {
-        return query;
-    }
-
-    query.push_str(" WHERE ");
-
-    for (key, value) in model.to_json().as_object().unwrap() {
-        if value != "" && !value.is_null() {
-            query.push_str(&key);
-            query.push_str(&comparison_operator);
-            if value.is_string() {
-                query.push_str(&value.to_string().replace('"', "'"));
-            }
-            if value.is_i64() {
-                query.push_str(&value.to_string().replace('"', ""));
-            }
-            if value.is_boolean() {
-                query.push_str(&value.to_string().replace('"', ""));
-            }
-            query.push_str(&conditional_operator);
+impl ComparisonOperator {
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            ComparisonOperator::Equal => "=",
+            ComparisonOperator::NotEqual => "!=",
+            ComparisonOperator::GreaterThan => ">",
+            ComparisonOperator::GreaterThanEqual => ">=",
+            ComparisonOperator::LessThan => "<",
+            ComparisonOperator::LessThanEqual => "<=",
+            ComparisonOperator::Basic => "",
         }
     }
-
-    query = query.trim_end_matches(&conditional_operator).to_string();
-
-    query
-}
-
-//INSERT INTO MyStruct (id, name, age) VALUES ($1, $2, $3)
-//"UPDATE your_table SET username = $1, password = $2 WHERE id = $3";
-
-pub fn insert<T>(model: T) -> String
-where
-    T: ModelBuilder,
-{
-    let mut query = format!("INSERT INTO {} (", model.table_name());
-    let mut values = String::from("VALUES (");
-
-    for (key, value) in model.to_json().as_object().unwrap() {
-        if key == "id" {
-            query.push_str(&key);
-            //values.push_str("uuid_generate_v4()::text");
-            values.push_str("uuid_generate_v4()");
-            query.push_str(", ");
-            values.push_str(", ");
-        }
-        if value != "" && key != "id" && !value.is_null() {
-            query.push_str(&key);
-            if value.is_string() {
-                values.push_str(&value.to_string().replace('"', "'"));
-            }
-            if value.is_i64() {
-                values.push_str(&value.to_string().replace('"', ""));
-            }
-            if value.is_boolean() {
-                values.push_str(&value.to_string().replace('"', ""));
-            }
-
-            query.push_str(", ");
-            values.push_str(", ");
-        }
-    }
-    query = query.trim_end_matches(", ").to_string();
-    values = values.trim_end_matches(", ").to_string();
-    query.push_str(") ");
-    values.push_str(")");
-    query.push_str(&values);
-    query.push_str(" RETURNING *;");
-
-    query
-}
-
-pub fn update<T>(model: T) -> String
-where
-    T: ModelBuilder,
-{
-    let mut query = format!("UPDATE {} SET ", model.table_name());
-    let where_statement = format!(" WHERE id = {}", model.id());
-    for (key, value) in model.to_json().as_object().unwrap() {
-        if value != "" && !value.is_null() {
-            if key.to_string() != "id" {
-                query.push_str(&key);
-                query.push_str(" = ");
-                if value.is_string() {
-                    query.push_str(&value.to_string().replace('"', "'"));
-                }
-                if value.is_i64() {
-                    query.push_str(&value.to_string().replace('"', ""));
-                }
-                if value.is_boolean() {
-                    query.push_str(&value.to_string().replace('"', ""));
-                }
-                query.push_str(", ");
-            }
-        }
-    }
-    query = query.trim_end_matches(", ").to_string();
-    query.push_str(&where_statement);
-    query.push_str(" RETURNING *;");
-
-    query
 }
 
 pub fn delete<T>(model: T) -> String
@@ -170,4 +53,131 @@ where
         model.table_name(),
         model.id()
     )
+}
+
+macro_rules! insert_statement {
+    ($table:expr, $fields:expr, $values:expr) => {{
+        // Join fields and values to form the SQL INSERT statement
+        let fields_str = $fields.join(", ");
+        let values_str = $values.join(", ");
+        format!(
+            "INSERT INTO {} (id, {}) VALUES (uuid_generate_v4(), {}) RETURNING *;",
+            $table, fields_str, values_str
+        )
+    }};
+}
+
+pub fn insert<T>(model: T) -> String
+where
+    T: ModelBuilder,
+{
+    let json_data = model.to_json();
+
+    let fields: Vec<String> = json_data
+        .as_object()
+        .unwrap()
+        .iter()
+        .filter_map(|(key, value)| match value {
+            Value::Null => None,
+            Value::String(s) if !s.is_empty() => Some(key.to_string()),
+            Value::Number(_) => Some(key.to_string()),
+            Value::Bool(_) => Some(key.to_string()),
+            _ => None,
+        })
+        .collect();
+
+    let values: Vec<String> = json_data
+        .as_object()
+        .unwrap()
+        .values()
+        .filter_map(|value| match value {
+            Value::Null => None,
+            Value::String(s) if !s.is_empty() => Some(format!("'{}'", s)),
+            Value::Number(n) => Some(n.to_string()),
+            Value::Bool(b) => Some(b.to_string()),
+            _ => None,
+        })
+        .collect();
+
+    insert_statement!(model.table_name(), fields, values)
+}
+
+macro_rules! update_statement {
+    ($table:expr, $updates:expr, $id:expr) => {{
+        let set_clause_str = $updates.join(", ");
+
+        format!(
+            "UPDATE {} SET {} WHERE id = {} RETURNING *;",
+            $table, set_clause_str, $id
+        )
+    }};
+}
+
+pub fn update<T>(model: T) -> String
+where
+    T: ModelBuilder,
+{
+    let json_data = model.to_json();
+
+    let updates: Vec<String> = json_data
+        .as_object()
+        .unwrap()
+        .iter()
+        .filter_map(|(key, value)| {
+            if key == "id" {
+                return None;
+            }
+
+            match value {
+                Value::Null => None,
+                Value::String(s) if !s.is_empty() => Some(format!("{} = '{}'", key, s)),
+                Value::Number(n) => Some(format!("{} = {}", key, n)),
+                Value::Bool(b) => Some(format!("{} = {}", key, b)),
+                _ => None,
+            }
+        })
+        .collect();
+
+    update_statement!(model.table_name(), updates, model.id())
+}
+
+macro_rules! search_statement {
+    ($table:expr, $conditions:expr, $conditional_operator:expr) => {{
+        let where_clause_str = if !$conditions.is_empty() {
+            format!(
+                " WHERE {}",
+                $conditions.join(&format!(" {} ", $conditional_operator.to_str()))
+            )
+        } else {
+            String::new()
+        };
+        format!("SELECT * FROM {}{};", $table, where_clause_str)
+    }};
+}
+
+pub fn search<T>(
+    model: T,
+    comparison: ComparisonOperator,
+    conditional: ConditonalOperator,
+) -> String
+where
+    T: ModelBuilder,
+{
+    let json_data = model.to_json();
+    let comparison = comparison.to_str();
+
+    let searches: Vec<String> = json_data
+        .as_object()
+        .unwrap()
+        .iter()
+        .filter_map(|(key, value)| match value {
+            Value::Null => None,
+            Value::String(s) if !s.is_empty() => Some(format!("{} {} '{}'", key, comparison, s)),
+            Value::Number(n) => Some(format!("{} {} {}", key, comparison, n)),
+            Value::Bool(b) => Some(format!("{} {} {}", key, comparison, b)),
+            _ => None,
+        })
+        .collect();
+
+    search_statement!(model.table_name(), searches, conditional)
 }

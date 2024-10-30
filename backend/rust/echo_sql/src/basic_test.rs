@@ -58,7 +58,6 @@ mod tests {
                 Some(now)
             ),),
             format!("INSERT INTO products (id, name, created_at, updated_at) VALUES (uuid_generate_v4(), 'blanket', '{}', '{}') RETURNING *;", formatted_now,formatted_now)
-            
         )
     }
 
@@ -95,7 +94,6 @@ mod tests {
                 Some(now)
             )),
             format!("UPDATE accounts SET password = 'gogins', days_active = 7, verified = true, created_at = '{}', updated_at = '{}' WHERE id = '5' RETURNING *;",formatted_now,formatted_now)
-            
         )
     }
 
@@ -135,8 +133,7 @@ mod tests {
                 ComparisonOperator::Equal,
                 ConditonalOperator::AND,
             ),
-            format!("SELECT * FROM accounts WHERE id = '6' AND days_active = 7 AND verified = true AND created_at = '{}' AND updated_at = '{}'",formatted_now,formatted_now)
-            
+            format!("SELECT * FROM accounts WHERE id = '6' AND days_active = 7 AND verified = true AND created_at = '{}' AND updated_at = '{}';",formatted_now,formatted_now)
         )
     }
 
@@ -157,7 +154,28 @@ mod tests {
                 ComparisonOperator::Equal,
                 ConditonalOperator::Basic,
             ),
-            r#"SELECT * FROM accounts WHERE id = '6'"#
+            r#"SELECT * FROM accounts WHERE id = '6';"#
+        )
+    }
+
+    #[test]
+    fn test_generic_search_basic() {
+        assert_eq!(
+            search(
+                Account::new(
+                    "".to_string(),
+                    "".to_string(),
+                    "".to_string(),
+                    "".to_string(),
+                    None,
+                    None,
+                    None,
+                    None
+                ),
+                ComparisonOperator::Basic,
+                ConditonalOperator::Basic,
+            ),
+            r#"SELECT * FROM accounts;"#
         )
     }
 }
