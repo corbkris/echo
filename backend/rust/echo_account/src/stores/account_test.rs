@@ -22,32 +22,8 @@ mod tests {
         let account = accounts
             .insert(Account::new(
                 "".to_string(),
-                "".to_string(),
                 "corbin12345".to_string(),
                 "mypass1".to_string(),
-                Some(7),
-                Some(true),
-                None,
-                None,
-            ))
-            .await;
-        assert!(account.is_ok());
-        assert_ne!(account.unwrap().id, "");
-    }
-
-    #[tokio::test]
-    async fn test_user_insert_nil() {
-        let common = test_setup_common().await;
-
-        let mut accounts = common.db.accounts;
-        let account = accounts
-            .insert(Account::new(
-                "".to_string(),
-                "".to_string(),
-                "corbin2680".to_string(),
-                "mypass1".to_string(),
-                None,
-                None,
                 None,
                 None,
             ))
@@ -64,11 +40,8 @@ mod tests {
         let expected_account_result = accounts
             .insert(Account::new(
                 "".to_string(),
-                "".to_string(),
                 "corbin12345".to_string(),
                 "mypass1".to_string(),
-                Some(7),
-                Some(true),
                 None,
                 None,
             ))
@@ -82,9 +55,6 @@ mod tests {
                     expected_account.id.clone(),
                     "".to_string(),
                     "".to_string(),
-                    "".to_string(),
-                    None,
-                    None,
                     None,
                     None,
                 ),
@@ -102,15 +72,11 @@ mod tests {
                 actual_account.id.clone(),
                 "corbin2680".to_string(),
                 "corbin2680".to_string(),
-                "".to_string(),
-                None,
-                None,
                 None,
                 None,
             ))
             .await;
         assert!(updated_account_result.is_ok());
-        let updated_account = updated_account_result.unwrap();
 
         let actual_account_result = accounts
             .basic_search_single(
@@ -118,9 +84,6 @@ mod tests {
                     actual_account.id.clone(),
                     "".to_string(),
                     "".to_string(),
-                    "".to_string(),
-                    None,
-                    None,
                     None,
                     None,
                 ),
@@ -130,16 +93,12 @@ mod tests {
             .await;
         assert!(actual_account_result.is_ok());
         let actual_account = actual_account_result.unwrap();
-        assert_eq!(actual_account.email, updated_account.email);
 
         let deleted_account_result = accounts
             .delete(Account::new(
                 actual_account.id.clone(),
                 "".to_string(),
                 "".to_string(),
-                "".to_string(),
-                None,
-                None,
                 None,
                 None,
             ))
@@ -152,9 +111,6 @@ mod tests {
                     actual_account.id.clone(),
                     "".to_string(),
                     "".to_string(),
-                    "".to_string(),
-                    None,
-                    None,
                     None,
                     None,
                 ),

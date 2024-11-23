@@ -3,28 +3,20 @@ mod tests {
 
     use crate::basic::{delete, insert, search, update, ComparisonOperator, ConditonalOperator};
     use crate::models::account::Account;
-    use crate::models::product::Product;
     use chrono::Utc;
 
     #[test]
     fn test_generic_insert() {
-        let now = Utc::now();
-        let formatted_now = now.format("%Y-%m-%dT%H:%M:%S%.9fZ").to_string();
         assert_eq!(
             insert(Account::new(
                 "".to_string(),
-                "cardboard123".to_string(),
                 "corbin268".to_string(),
-                "dad".to_string(),
-                Some(5),
-                Some(true),
-                Some(now),
-                Some(now)
+                "password".to_string(),
+                None,
+                None
             )),
                     format!(
-            "INSERT INTO accounts (id, username, email, password, days_active, verified, created_at, updated_at) VALUES (uuid_generate_v4(), 'cardboard123', 'corbin268', 'dad', 5, true, '{}', '{}') RETURNING *;",
-           formatted_now,
-           formatted_now
+            "INSERT INTO accounts (username, password) VALUES ('corbin268', 'password') RETURNING *;",
         )
         );
     }
@@ -35,30 +27,12 @@ mod tests {
             insert(Account::new(
                 "".to_string(),
                 "".to_string(),
-                "corbin268".to_string(),
-                "dad".to_string(),
-                None,
-                None,
+                "password".to_string(),
                 None,
                 None
             )),
-            r#"INSERT INTO accounts (id, email, password) VALUES (uuid_generate_v4(), 'corbin268', 'dad') RETURNING *;"#
+            r#"INSERT INTO accounts (password) VALUES ('password') RETURNING *;"#
         );
-    }
-
-    #[test]
-    fn test_generic_insert_uuid() {
-        let now = Utc::now();
-        let formatted_now = now.format("%Y-%m-%dT%H:%M:%S%.9fZ").to_string();
-        assert_eq!(
-            insert(Product::new(
-                "".to_string(),
-                "blanket".to_string(),
-                Some(now),
-                Some(now)
-            ),),
-            format!("INSERT INTO products (id, name, created_at, updated_at) VALUES (uuid_generate_v4(), 'blanket', '{}', '{}') RETURNING *;", formatted_now,formatted_now)
-        )
     }
 
     #[test]
@@ -68,9 +42,6 @@ mod tests {
                 "5".to_string(),
                 "".to_string(),
                 "".to_string(),
-                "".to_string(),
-                None,
-                None,
                 None,
                 None
             )),
@@ -85,32 +56,28 @@ mod tests {
         assert_eq!(
             update(Account::new(
                 "5".to_string(),
-                "".to_string(),
-                "".to_string(),
+                "corbin268".to_string(),
                 "gogins".to_string(),
-                Some(7),
-                Some(true),
-                Some(now),
+                None,
                 Some(now)
             )),
-            format!("UPDATE accounts SET password = 'gogins', days_active = 7, verified = true, created_at = '{}', updated_at = '{}' WHERE id = '5' RETURNING *;",formatted_now,formatted_now)
+            format!("UPDATE accounts SET username = 'corbin268', password = 'gogins', updated_at = '{}' WHERE id = '5' RETURNING *;",formatted_now)
         )
     }
 
     #[test]
     fn test_generic_update_nil() {
+        let now = Utc::now();
+        let formatted_now = now.format("%Y-%m-%dT%H:%M:%S%.9fZ").to_string();
         assert_eq!(
             update(Account::new(
                 "5".to_string(),
                 "".to_string(),
-                "".to_string(),
                 "gogins".to_string(),
                 None,
-                None,
-                None,
-                None
+                Some(now)
             )),
-            r#"UPDATE accounts SET password = 'gogins' WHERE id = '5' RETURNING *;"#
+            format!("UPDATE accounts SET password = 'gogins', updated_at = '{}' WHERE id = '5' RETURNING *;",formatted_now)
         )
     }
 
@@ -122,18 +89,15 @@ mod tests {
             search(
                 Account::new(
                     "6".to_string(),
-                    "".to_string(),
-                    "".to_string(),
-                    "".to_string(),
-                    Some(7),
-                    Some(true),
+                    "corbin268".to_string(),
+                    "password".to_string(),
                     Some(now),
                     Some(now)
                 ),
                 ComparisonOperator::Equal,
                 ConditonalOperator::AND,
             ),
-            format!("SELECT * FROM accounts WHERE id = '6' AND days_active = 7 AND verified = true AND created_at = '{}' AND updated_at = '{}';",formatted_now,formatted_now)
+            format!("SELECT * FROM accounts WHERE id = '6' AND username = 'corbin268' AND password = 'password' AND created_at = '{}' AND updated_at = '{}';",formatted_now,formatted_now)
         )
     }
 
@@ -141,16 +105,7 @@ mod tests {
     fn test_generic_search_nil() {
         assert_eq!(
             search(
-                Account::new(
-                    "6".to_string(),
-                    "".to_string(),
-                    "".to_string(),
-                    "".to_string(),
-                    None,
-                    None,
-                    None,
-                    None
-                ),
+                Account::new("6".to_string(), "".to_string(), "".to_string(), None, None),
                 ComparisonOperator::Equal,
                 ConditonalOperator::Basic,
             ),
@@ -162,16 +117,7 @@ mod tests {
     fn test_generic_search_basic() {
         assert_eq!(
             search(
-                Account::new(
-                    "".to_string(),
-                    "".to_string(),
-                    "".to_string(),
-                    "".to_string(),
-                    None,
-                    None,
-                    None,
-                    None
-                ),
+                Account::new("".to_string(), "".to_string(), "".to_string(), None, None),
                 ComparisonOperator::Basic,
                 ConditonalOperator::Basic,
             ),

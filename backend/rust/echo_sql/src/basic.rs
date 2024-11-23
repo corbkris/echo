@@ -61,7 +61,7 @@ macro_rules! insert_statement {
         let fields_str = $fields.join(", ");
         let values_str = $values.join(", ");
         format!(
-            "INSERT INTO {} (id, {}) VALUES (uuid_generate_v4(), {}) RETURNING *;",
+            "INSERT INTO {} ({}) VALUES ({}) RETURNING *;",
             $table, fields_str, values_str
         )
     }};

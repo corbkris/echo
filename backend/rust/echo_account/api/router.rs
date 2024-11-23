@@ -1,8 +1,8 @@
 use crate::accounts::{controller::State as account_state, router::build_account_subrouter};
 use crate::middleware::{
     authorization::Service as middleware_service,
-    basic::{handler_404, logger_handler},
-    error::{error_handler, ApiError},
+    basic::logger_handler,
+    error::{error_handler, handler_404, ApiError},
 };
 use echo_account::business::accounts::service::Service as account_service;
 use echo_account::business::wrapper::Wrapper;

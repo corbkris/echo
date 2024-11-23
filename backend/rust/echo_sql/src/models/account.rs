@@ -11,14 +11,8 @@ pub struct Account {
     pub id: String,
     #[serde(rename = "username")]
     pub username: String,
-    #[serde(rename = "email")]
-    pub email: String,
     #[serde(rename = "password")]
     pub password: String,
-    #[serde(rename = "days_active")]
-    pub days_active: Option<i32>,
-    #[serde(rename = "verified")]
-    pub verified: Option<bool>,
     #[serde(rename = "created_at")]
     pub created_at: Option<DateTime<Utc>>,
     #[serde(rename = "updated_at")]
@@ -29,20 +23,14 @@ impl Account {
     pub fn new(
         id: String,
         username: String,
-        email: String,
         password: String,
-        days_active: Option<i32>,
-        verified: Option<bool>,
         created_at: Option<DateTime<Utc>>,
         updated_at: Option<DateTime<Utc>>,
     ) -> Self {
         Account {
             id,
             username,
-            email,
             password,
-            days_active,
-            verified,
             created_at,
             updated_at,
         }

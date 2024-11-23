@@ -5,10 +5,7 @@ pub fn marshal(business_account: BusinessAccount) -> Account {
     Account {
         id: business_account.id,
         username: business_account.username,
-        email: business_account.email,
         password: business_account.password,
-        days_active: business_account.days_active,
-        verified: business_account.verified,
         created_at: None,
         updated_at: None,
     }
@@ -17,10 +14,10 @@ pub fn marshal(business_account: BusinessAccount) -> Account {
 pub fn unmarshal(model_account: Account) -> BusinessAccount {
     BusinessAccount {
         id: model_account.id,
+        email: "".to_string(),
+        days_active: None,
+        verified: None,
         username: model_account.username,
-        email: model_account.email,
         password: model_account.password,
-        days_active: model_account.days_active,
-        verified: model_account.verified,
     }
 }
