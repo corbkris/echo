@@ -11,6 +11,8 @@ use echo_redis::{
     generic::Cache,
 };
 use echo_sql::{connection::Config as PgConfig, generic::DB};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 pub struct Common {
     pub db: EchoDatabase,
@@ -28,7 +30,7 @@ impl Common {
             }
         };
         let db_store = DB::new(postgres);
-        let db = EchoDatabase::new(db_store);
+        let db = EchoDatabase::new(Arc::new(Mutex::new(db_store)));
 
         let config = RedisConfig::new();
         let basic_client = match BasicClient::new(config) {

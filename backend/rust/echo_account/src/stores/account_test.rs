@@ -28,6 +28,16 @@ mod tests {
                 None,
             ))
             .await;
+
+        let _ = accounts
+            .insert(Account::new(
+                "".to_string(),
+                "corbin12345".to_string(),
+                "mypass1".to_string(),
+                None,
+                None,
+            ))
+            .await;
         assert!(account.is_ok());
         assert_ne!(account.unwrap().id, "");
     }
