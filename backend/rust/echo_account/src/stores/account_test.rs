@@ -1,5 +1,8 @@
 #[cfg(test)]
 mod tests {
+    use std::borrow::Borrow;
+    use std::rc::Rc;
+
     use crate::assembly::setup::Common;
     use echo_sql::basic::{ComparisonOperator, ConditonalOperator};
     use echo_sql::models::account::Account;
@@ -22,24 +25,30 @@ mod tests {
         let account = accounts
             .insert(Account::new(
                 "".to_string(),
-                "corbin12345".to_string(),
-                "mypass1".to_string(),
+                fakeit::internet::username(),
+                fakeit::password::generate(true, true, true, 8),
                 None,
                 None,
             ))
             .await;
 
-        let _ = accounts
-            .insert(Account::new(
-                "".to_string(),
-                "corbin12345".to_string(),
-                "mypass1".to_string(),
-                None,
-                None,
-            ))
-            .await;
         assert!(account.is_ok());
         assert_ne!(account.unwrap().id, "");
+    }
+
+    #[tokio::test]
+    async fn test_user_update() {
+        let updated_password = Rc::new(fakeit::password::generate(true, true, true, 8));
+
+        let mut common = test_setup_common().await;
+        let mut account = common.create_account().await;
+        account.password = Rc::clone(&updated_password).to_string();
+        let updated_account = common.db.accounts.update(account).await;
+        assert!(updated_account.is_ok());
+        assert_eq!(
+            Rc::clone(&updated_password).to_string(),
+            updated_account.unwrap().password
+        );
     }
 
     #[tokio::test]

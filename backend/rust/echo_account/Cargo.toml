@@ -38,3 +38,5 @@ bcrypt = {version = "0.15.1"}
 rand = {version = "0.8.5"}
 
 uuid = {version = "1.8.0", features = ["v4"]}
+
+fakeit = "1.3.0"
