@@ -21,15 +21,11 @@ impl AccountStore {
         Self { db }
     }
 
-    pub async fn insert(&mut self, account: &Account) -> Result<Account, Error> {
+    pub async fn insert(&mut self, account: &mut Account) -> Option<Error> {
         self.db.lock().await.insert(account).await
     }
 
-    pub async fn insert_v2(&mut self, account: &mut Account) -> Option<Error> {
-        self.db.lock().await.insert_v2(account).await
-    }
-
-    pub async fn update(&mut self, account: &Account) -> Result<Account, Error> {
+    pub async fn update(&mut self, account: &mut Account) -> Option<Error> {
         self.db.lock().await.update(account).await
     }
 

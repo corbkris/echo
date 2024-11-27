@@ -14,11 +14,11 @@ impl BoothStore {
         Self { db }
     }
 
-    pub async fn insert(&mut self, booth: &Booth) -> Result<Booth, Error> {
+    pub async fn insert(&mut self, booth: &mut Booth) -> Option<Error> {
         self.db.insert(booth).await
     }
 
-    pub async fn update(&mut self, booth: &Booth) -> Result<Booth, Error> {
+    pub async fn update(&mut self, booth: &mut Booth) -> Option<Error> {
         self.db.update(booth).await
     }
 

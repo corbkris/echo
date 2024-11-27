@@ -14,22 +14,15 @@ mod tests {
             }
         };
         let mut db = DB::new(conn);
-        match db
-            .insert(&Account::new(
-                "".to_string(),
-                "cardboard1234".to_string(),
-                "corbin1234".to_string(),
-                None,
-                None,
-            ))
-            .await
-        {
-            Ok(account) => {
-                assert_ne!(account.id, "")
-            }
-            Err(err) => {
-                panic!("{}", err)
-            }
-        };
+        let mut account = Account::new(
+            "".to_string(),
+            "cardboard1234".to_string(),
+            "corbin1234".to_string(),
+            None,
+            None,
+        );
+        let result = db.insert(&mut account).await;
+        assert!(result.is_none());
+        assert_ne!(account.id, "");
     }
 }

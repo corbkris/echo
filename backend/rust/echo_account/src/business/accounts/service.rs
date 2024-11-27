@@ -82,17 +82,12 @@ impl Service {
             return Err("invalid code".to_string());
         }
 
-        match self
-            .db
-            .accounts
-            .insert(&marshal(Account::email_password(
-                account.email,
-                account.password,
-            )))
-            .await
-        {
-            Ok(account) => Ok(unmarshal(account)),
-            Err(err) => Err(err.to_string()),
+        let mut marshaled_account =
+            marshal(Account::email_password(account.email, account.password));
+
+        match self.db.accounts.insert(&mut marshaled_account).await {
+            None => Ok(unmarshal(marshaled_account)),
+            Some(err) => Err(err.to_string()),
         }
     }
 

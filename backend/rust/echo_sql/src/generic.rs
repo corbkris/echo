@@ -16,16 +16,7 @@ impl DB {
         Self { pool }
     }
 
-    pub async fn insert<T>(&mut self, model: &T) -> Result<T, Error>
-    where
-        T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
-    {
-        query_as::<Postgres, T>(&insert(model))
-            .fetch_one(&self.pool)
-            .await
-    }
-
-    pub async fn insert_v2<T>(&mut self, model: &mut T) -> Option<Error>
+    pub async fn insert<T>(&mut self, model: &mut T) -> Option<Error>
     where
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
     {
@@ -41,13 +32,20 @@ impl DB {
         }
     }
 
-    pub async fn update<T>(&mut self, model: &T) -> Result<T, Error>
+    pub async fn update<T>(&mut self, model: &mut T) -> Option<Error>
     where
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
     {
-        query_as::<Postgres, T>(&update(model))
+        match query_as::<Postgres, T>(&update(model))
             .fetch_one(&self.pool)
             .await
+        {
+            Ok(updated_model) => {
+                *model = updated_model;
+                None
+            }
+            Err(err) => Some(err),
+        }
     }
 
     pub async fn delete<T>(&mut self, model: &T) -> Result<PgQueryResult, Error>

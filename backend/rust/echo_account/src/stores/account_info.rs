@@ -21,11 +21,11 @@ impl AccountInfoStore {
         Self { db }
     }
 
-    pub async fn insert(&mut self, account_info: &AccountInfo) -> Result<AccountInfo, Error> {
+    pub async fn insert(&mut self, account_info: &mut AccountInfo) -> Option<Error> {
         self.db.lock().await.insert(account_info).await
     }
 
-    pub async fn update(&mut self, account_info: &AccountInfo) -> Result<AccountInfo, Error> {
+    pub async fn update(&mut self, account_info: &mut AccountInfo) -> Option<Error> {
         self.db.lock().await.update(account_info).await
     }
 
