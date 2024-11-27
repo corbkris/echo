@@ -23,28 +23,28 @@ impl BasicAccountInfoStore {
 
     pub async fn insert(
         &mut self,
-        managed_account_info: BasicAccountInfo,
+        managed_account_info: &BasicAccountInfo,
     ) -> Result<BasicAccountInfo, Error> {
         self.db.lock().await.insert(managed_account_info).await
     }
 
     pub async fn update(
         &mut self,
-        managed_account_info: BasicAccountInfo,
+        managed_account_info: &BasicAccountInfo,
     ) -> Result<BasicAccountInfo, Error> {
         self.db.lock().await.update(managed_account_info).await
     }
 
     pub async fn delete(
         &mut self,
-        managed_account_info: BasicAccountInfo,
+        managed_account_info: &BasicAccountInfo,
     ) -> Result<PgQueryResult, Error> {
         self.db.lock().await.delete(managed_account_info).await
     }
 
     pub async fn basic_search(
         &mut self,
-        managed_account_info: BasicAccountInfo,
+        managed_account_info: &BasicAccountInfo,
         comparison: StoreComparisonOperator,
         conditional: StoreConditionalOperator,
     ) -> Result<Vec<BasicAccountInfo>, Error> {
@@ -57,7 +57,7 @@ impl BasicAccountInfoStore {
 
     pub async fn basic_search_single(
         &mut self,
-        managed_account_info: BasicAccountInfo,
+        managed_account_info: &BasicAccountInfo,
         comparison: StoreComparisonOperator,
         conditional: StoreConditionalOperator,
     ) -> Result<BasicAccountInfo, Error> {

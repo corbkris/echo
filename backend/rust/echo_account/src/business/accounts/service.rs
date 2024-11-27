@@ -85,7 +85,7 @@ impl Service {
         match self
             .db
             .accounts
-            .insert(marshal(Account::email_password(
+            .insert(&marshal(Account::email_password(
                 account.email,
                 account.password,
             )))
@@ -105,7 +105,7 @@ impl Service {
             .db
             .accounts
             .basic_search_single(
-                marshal(Account::email_password(email, password)),
+                &marshal(Account::email_password(email, password)),
                 StoreComparisonOperator::Equal,
                 StoreConditionalOperator::AND,
             )
@@ -121,7 +121,7 @@ impl Service {
             .db
             .accounts
             .basic_search_single(
-                marshal(Account::email(email.to_string())),
+                &marshal(Account::email(email.to_string())),
                 StoreComparisonOperator::Equal,
                 StoreConditionalOperator::Basic,
             )
@@ -137,7 +137,7 @@ impl Service {
             .db
             .accounts
             .basic_search_single(
-                marshal(Account::id(id.to_string())),
+                &marshal(Account::id(id.to_string())),
                 StoreComparisonOperator::Equal,
                 StoreConditionalOperator::Basic,
             )

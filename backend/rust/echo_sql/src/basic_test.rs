@@ -8,7 +8,7 @@ mod tests {
     #[test]
     fn test_generic_insert() {
         assert_eq!(
-            insert(Account::new(
+            insert(&Account::new(
                 "".to_string(),
                 "corbin268".to_string(),
                 "password".to_string(),
@@ -24,7 +24,7 @@ mod tests {
     #[test]
     fn test_generic_insert_nil() {
         assert_eq!(
-            insert(Account::new(
+            insert(&Account::new(
                 "".to_string(),
                 "".to_string(),
                 "password".to_string(),
@@ -38,7 +38,7 @@ mod tests {
     #[test]
     fn test_generic_delete() {
         assert_eq!(
-            delete(Account::new(
+            delete(&Account::new(
                 "5".to_string(),
                 "".to_string(),
                 "".to_string(),
@@ -54,7 +54,7 @@ mod tests {
         let now = Utc::now();
         let formatted_now = now.format("%Y-%m-%dT%H:%M:%S%.9fZ").to_string();
         assert_eq!(
-            update(Account::new(
+            update(&Account::new(
                 "5".to_string(),
                 "corbin268".to_string(),
                 "gogins".to_string(),
@@ -70,7 +70,7 @@ mod tests {
         let now = Utc::now();
         let formatted_now = now.format("%Y-%m-%dT%H:%M:%S%.9fZ").to_string();
         assert_eq!(
-            update(Account::new(
+            update(&Account::new(
                 "5".to_string(),
                 "".to_string(),
                 "gogins".to_string(),
@@ -87,7 +87,7 @@ mod tests {
         let formatted_now = now.format("%Y-%m-%dT%H:%M:%S%.9fZ").to_string();
         assert_eq!(
             search(
-                Account::new(
+                &Account::new(
                     "6".to_string(),
                     "corbin268".to_string(),
                     "password".to_string(),
@@ -105,7 +105,7 @@ mod tests {
     fn test_generic_search_nil() {
         assert_eq!(
             search(
-                Account::new("6".to_string(), "".to_string(), "".to_string(), None, None),
+                &Account::new("6".to_string(), "".to_string(), "".to_string(), None, None),
                 ComparisonOperator::Equal,
                 ConditonalOperator::Basic,
             ),
@@ -117,7 +117,7 @@ mod tests {
     fn test_generic_search_basic() {
         assert_eq!(
             search(
-                Account::new("".to_string(), "".to_string(), "".to_string(), None, None),
+                &Account::new("".to_string(), "".to_string(), "".to_string(), None, None),
                 ComparisonOperator::Basic,
                 ConditonalOperator::Basic,
             ),

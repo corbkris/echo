@@ -21,21 +21,21 @@ impl AccountInfoStore {
         Self { db }
     }
 
-    pub async fn insert(&mut self, account_info: AccountInfo) -> Result<AccountInfo, Error> {
+    pub async fn insert(&mut self, account_info: &AccountInfo) -> Result<AccountInfo, Error> {
         self.db.lock().await.insert(account_info).await
     }
 
-    pub async fn update(&mut self, account_info: AccountInfo) -> Result<AccountInfo, Error> {
+    pub async fn update(&mut self, account_info: &AccountInfo) -> Result<AccountInfo, Error> {
         self.db.lock().await.update(account_info).await
     }
 
-    pub async fn delete(&mut self, account_info: AccountInfo) -> Result<PgQueryResult, Error> {
+    pub async fn delete(&mut self, account_info: &AccountInfo) -> Result<PgQueryResult, Error> {
         self.db.lock().await.delete(account_info).await
     }
 
     pub async fn basic_search(
         &mut self,
-        account_info: AccountInfo,
+        account_info: &AccountInfo,
         comparison: StoreComparisonOperator,
         conditional: StoreConditionalOperator,
     ) -> Result<Vec<AccountInfo>, Error> {
@@ -48,7 +48,7 @@ impl AccountInfoStore {
 
     pub async fn basic_search_single(
         &mut self,
-        account_info: AccountInfo,
+        account_info: &AccountInfo,
         comparison: StoreComparisonOperator,
         conditional: StoreConditionalOperator,
     ) -> Result<AccountInfo, Error> {

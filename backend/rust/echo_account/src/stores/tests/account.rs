@@ -6,7 +6,7 @@ impl Common {
         match self
             .db
             .accounts
-            .insert(Account::new(
+            .insert(&Account::new(
                 "".to_string(),
                 fakeit::internet::username(),
                 fakeit::password::generate(true, true, true, 8),

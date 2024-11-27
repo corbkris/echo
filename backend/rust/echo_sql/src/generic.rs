@@ -16,7 +16,7 @@ impl DB {
         Self { pool }
     }
 
-    pub async fn insert<T>(&mut self, model: T) -> Result<T, Error>
+    pub async fn insert<T>(&mut self, model: &T) -> Result<T, Error>
     where
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
     {
@@ -25,7 +25,23 @@ impl DB {
             .await
     }
 
-    pub async fn update<T>(&mut self, model: T) -> Result<T, Error>
+    pub async fn insert_v2<T>(&mut self, model: &mut T) -> Option<Error>
+    where
+        T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
+    {
+        match query_as::<Postgres, T>(&insert(model))
+            .fetch_one(&self.pool)
+            .await
+        {
+            Ok(updated_model) => {
+                *model = updated_model;
+                None
+            }
+            Err(err) => Some(err),
+        }
+    }
+
+    pub async fn update<T>(&mut self, model: &T) -> Result<T, Error>
     where
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
     {
@@ -34,7 +50,7 @@ impl DB {
             .await
     }
 
-    pub async fn delete<T>(&mut self, model: T) -> Result<PgQueryResult, Error>
+    pub async fn delete<T>(&mut self, model: &T) -> Result<PgQueryResult, Error>
     where
         T: ModelBuilder,
     {
@@ -43,7 +59,7 @@ impl DB {
 
     pub async fn search<T>(
         &mut self,
-        model: T,
+        model: &T,
         comparison: ComparisonOperator,
         conditional: ConditonalOperator,
     ) -> Result<T, Error>
@@ -57,7 +73,7 @@ impl DB {
 
     pub async fn search_all<T>(
         &mut self,
-        model: T,
+        model: &T,
         comparison: ComparisonOperator,
         conditional: ConditonalOperator,
     ) -> Result<Vec<T>, Error>

@@ -44,7 +44,7 @@ impl ComparisonOperator {
     }
 }
 
-pub fn delete<T>(model: T) -> String
+pub fn delete<T>(model: &T) -> String
 where
     T: ModelBuilder,
 {
@@ -67,7 +67,7 @@ macro_rules! insert_statement {
     }};
 }
 
-pub fn insert<T>(model: T) -> String
+pub fn insert<T>(model: &T) -> String
 where
     T: ModelBuilder,
 {
@@ -113,7 +113,7 @@ macro_rules! update_statement {
     }};
 }
 
-pub fn update<T>(model: T) -> String
+pub fn update<T>(model: &T) -> String
 where
     T: ModelBuilder,
 {
@@ -156,7 +156,7 @@ macro_rules! search_statement {
 }
 
 pub fn search<T>(
-    model: T,
+    model: &T,
     comparison: ComparisonOperator,
     conditional: ConditonalOperator,
 ) -> String

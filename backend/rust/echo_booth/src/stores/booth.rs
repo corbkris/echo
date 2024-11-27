@@ -14,21 +14,21 @@ impl BoothStore {
         Self { db }
     }
 
-    pub async fn insert(&mut self, booth: Booth) -> Result<Booth, Error> {
+    pub async fn insert(&mut self, booth: &Booth) -> Result<Booth, Error> {
         self.db.insert(booth).await
     }
 
-    pub async fn update(&mut self, booth: Booth) -> Result<Booth, Error> {
+    pub async fn update(&mut self, booth: &Booth) -> Result<Booth, Error> {
         self.db.update(booth).await
     }
 
-    pub async fn delete(&mut self, booth: Booth) -> Result<PgQueryResult, Error> {
+    pub async fn delete(&mut self, booth: &Booth) -> Result<PgQueryResult, Error> {
         self.db.delete(booth).await
     }
 
     pub async fn basic_search(
         &mut self,
-        booth: Booth,
+        booth: &Booth,
         comparison: ComparisonOperator,
         conditional: ConditonalOperator,
     ) -> Result<Vec<Booth>, Error> {
@@ -37,7 +37,7 @@ impl BoothStore {
 
     pub async fn basic_search_single(
         &mut self,
-        booth: Booth,
+        booth: &Booth,
         comparison: ComparisonOperator,
         conditional: ConditonalOperator,
     ) -> Result<Booth, Error> {

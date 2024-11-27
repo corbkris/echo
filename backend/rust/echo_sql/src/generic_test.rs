@@ -15,7 +15,7 @@ mod tests {
         };
         let mut db = DB::new(conn);
         match db
-            .insert(Account::new(
+            .insert(&Account::new(
                 "".to_string(),
                 "cardboard1234".to_string(),
                 "corbin1234".to_string(),
