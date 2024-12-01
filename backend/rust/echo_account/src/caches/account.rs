@@ -1,5 +1,7 @@
-use echo_redis::{generic::Cache, models::account::Account as CacheAccount};
-use redis::RedisError;
+use echo_redis::{
+    generic::{Cache, CacheError},
+    models::account::Account as CacheAccount,
+};
 use serde_json;
 
 const BASE_RATE_LIMIT: &str = "ratelimiter:";
@@ -15,17 +17,17 @@ impl<'a> AccountCache<'a> {
         Self { cache }
     }
 
-    pub async fn set(&self, key: &String, value: &String) -> Result<String, RedisError> {
+    pub async fn set(&self, key: &String, value: &String) -> Result<String, CacheError> {
         self.cache
             .set(&vec![BASE_RATE_LIMIT, key].join("::"), value)
             .await
     }
 
-    pub async fn get(&self, key: &String) -> Result<String, RedisError> {
+    pub async fn get(&self, key: &String) -> Result<String, CacheError> {
         self.cache.get(&vec![BASE_RATE_LIMIT, key].join("::")).await
     }
 
-    pub async fn set_signup(&self, key: &String, value: &Account) -> Result<String, RedisError> {
+    pub async fn set_signup(&self, key: &String, value: &Account) -> Result<String, CacheError> {
         self.cache
             .set_exp(
                 &vec![BASE_SIGNUP, key].join("::"),

@@ -1,10 +1,12 @@
 use crate::caches::{account::AccountCache, wrapper::EchoCache};
 use async_once_cell::OnceCell;
-use echo_redis::{connection::Config, generic::Cache};
-use redis::Client;
+use echo_redis::{
+    connection::{Config, RedisClient},
+    generic::Cache,
+};
 
 pub static ECHO_CACHE: OnceCell<EchoCache> = OnceCell::new();
-pub static ECHO_CLIENT: OnceCell<Client> = OnceCell::new();
+pub static ECHO_CLIENT: OnceCell<RedisClient> = OnceCell::new();
 pub static ECHO_REDIS: OnceCell<Cache> = OnceCell::new();
 pub static ECHO_ACCOUNT_CACHE: OnceCell<AccountCache> = OnceCell::new();
 
@@ -20,7 +22,7 @@ impl<'a> Common<'a> {
     }
 }
 
-async fn get_client() -> Client {
+async fn get_client() -> RedisClient {
     Config::new().connect().unwrap()
 }
 

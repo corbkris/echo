@@ -16,14 +16,16 @@ use echo_rabbit::{
     connection::{Config as RabbitConfig, RabbitConnection},
     generic::{Que, RabbitChannel},
 };
-use echo_redis::{connection::Config as CacheConfig, generic::Cache};
+use echo_redis::{
+    connection::{Config as CacheConfig, RedisClient},
+    generic::Cache,
+};
 use echo_sql::{
     connection::{Config as DBConfig, PostgresPool},
     generic::DB,
 };
 use hyper::Server;
 use middleware::error::{error_handler, handler_404};
-use redis::Client;
 use routerify::{Router, RouterService};
 use std::{net::SocketAddr, sync::LazyLock};
 use tokio::runtime::Runtime;
@@ -55,7 +57,8 @@ async fn main() {
     });
 
     //cache
-    static REDIS_CLIENT: LazyLock<Client> = LazyLock::new(|| CacheConfig::new().connect().unwrap());
+    static REDIS_CLIENT: LazyLock<RedisClient> =
+        LazyLock::new(|| CacheConfig::new().connect().unwrap());
     static REDIS_CACHE: LazyLock<Cache> = LazyLock::new(|| Cache::new(&REDIS_CLIENT));
     static ACCOUNT_CACHE: LazyLock<AccountCache> =
         LazyLock::new(|| AccountCache::new(&REDIS_CACHE));

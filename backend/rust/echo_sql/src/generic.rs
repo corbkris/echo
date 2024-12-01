@@ -6,6 +6,8 @@ use sqlx::{
     postgres::{PgQueryResult, PgRow},
     query, query_as, Error, FromRow, Postgres,
 };
+pub type PostgresError = Error;
+pub type PostgresQueryResult = PgQueryResult;
 
 pub struct DB<'a> {
     pub pool: &'a PostgresPool,
@@ -16,7 +18,7 @@ impl<'a> DB<'a> {
         Self { pool }
     }
 
-    pub async fn insert<T>(&self, model: &mut T) -> Option<Error>
+    pub async fn insert<T>(&self, model: &mut T) -> Option<PostgresError>
     where
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
     {
@@ -32,7 +34,7 @@ impl<'a> DB<'a> {
         }
     }
 
-    pub async fn update<T>(&self, model: &mut T) -> Option<Error>
+    pub async fn update<T>(&self, model: &mut T) -> Option<PostgresError>
     where
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
     {
@@ -48,7 +50,7 @@ impl<'a> DB<'a> {
         }
     }
 
-    pub async fn delete<T>(&self, model: &T) -> Result<PgQueryResult, Error>
+    pub async fn delete<T>(&self, model: &T) -> Result<PostgresQueryResult, PostgresError>
     where
         T: ModelBuilder,
     {
@@ -60,7 +62,7 @@ impl<'a> DB<'a> {
         model: &T,
         comparison: ComparisonOperator,
         conditional: ConditonalOperator,
-    ) -> Result<T, Error>
+    ) -> Result<T, PostgresError>
     where
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
     {
@@ -74,7 +76,7 @@ impl<'a> DB<'a> {
         model: &T,
         comparison: ComparisonOperator,
         conditional: ConditonalOperator,
-    ) -> Result<Vec<T>, Error>
+    ) -> Result<Vec<T>, PostgresError>
     where
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
     {

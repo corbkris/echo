@@ -1,9 +1,8 @@
 use echo_sql::{
     basic::{ComparisonOperator, ConditonalOperator},
-    generic::DB,
+    generic::{PostgresError, PostgresQueryResult, DB},
     models::account_info::AccountInfo as ModelAccountInfo,
 };
-use sqlx::{postgres::PgQueryResult, Error};
 
 pub type StoreConditionalOperator = ConditonalOperator;
 pub type StoreComparisonOperator = ComparisonOperator;
@@ -18,15 +17,18 @@ impl<'a> AccountInfoStore<'a> {
         Self { db }
     }
 
-    pub async fn insert(&self, account_info: &mut AccountInfo) -> Option<Error> {
+    pub async fn insert(&self, account_info: &mut AccountInfo) -> Option<PostgresError> {
         self.db.insert(account_info).await
     }
 
-    pub async fn update(&self, account_info: &mut AccountInfo) -> Option<Error> {
+    pub async fn update(&self, account_info: &mut AccountInfo) -> Option<PostgresError> {
         self.db.update(account_info).await
     }
 
-    pub async fn delete(&self, account_info: &AccountInfo) -> Result<PgQueryResult, Error> {
+    pub async fn delete(
+        &self,
+        account_info: &AccountInfo,
+    ) -> Result<PostgresQueryResult, PostgresError> {
         self.db.delete(account_info).await
     }
 
@@ -35,7 +37,7 @@ impl<'a> AccountInfoStore<'a> {
         account_info: &AccountInfo,
         comparison: StoreComparisonOperator,
         conditional: StoreConditionalOperator,
-    ) -> Result<Vec<AccountInfo>, Error> {
+    ) -> Result<Vec<AccountInfo>, PostgresError> {
         self.db
             .search_all(account_info, comparison, conditional)
             .await
@@ -46,7 +48,7 @@ impl<'a> AccountInfoStore<'a> {
         account_info: &AccountInfo,
         comparison: StoreComparisonOperator,
         conditional: StoreConditionalOperator,
-    ) -> Result<AccountInfo, Error> {
+    ) -> Result<AccountInfo, PostgresError> {
         self.db.search(account_info, comparison, conditional).await
     }
 }

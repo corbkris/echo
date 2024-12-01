@@ -1,6 +1,8 @@
 use async_once_cell::OnceCell;
-use echo_sql::{connection::Config, generic::DB};
-use sqlx::PgPool;
+use echo_sql::{
+    connection::{Config, PostgresPool},
+    generic::DB,
+};
 
 use crate::stores::{
     account::AccountStore, account_info::AccountInfoStore,
@@ -9,7 +11,7 @@ use crate::stores::{
 };
 
 pub static ECHO_DB: OnceCell<EchoDatabase> = OnceCell::new();
-pub static ECHO_POOL: OnceCell<PgPool> = OnceCell::new();
+pub static ECHO_POOL: OnceCell<PostgresPool> = OnceCell::new();
 pub static ECHO_POSTGRES: OnceCell<DB> = OnceCell::new();
 pub static ECHO_ACCOUNT_STORE: OnceCell<AccountStore> = OnceCell::new();
 pub static ECHO_ACCOUNT_INFO_STORE: OnceCell<AccountInfoStore> = OnceCell::new();
@@ -28,7 +30,7 @@ impl<'a> Common<'a> {
     }
 }
 
-async fn get_pool() -> PgPool {
+async fn get_pool() -> PostgresPool {
     Config::new().connect().await.unwrap()
 }
 

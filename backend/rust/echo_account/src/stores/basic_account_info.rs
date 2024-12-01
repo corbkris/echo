@@ -1,9 +1,8 @@
 use echo_sql::{
     basic::{ComparisonOperator, ConditonalOperator},
-    generic::DB,
+    generic::{PostgresError, PostgresQueryResult, DB},
     models::basic_account_info::BasicAccountInfo as ModelBasicAccountInfo,
 };
-use sqlx::{postgres::PgQueryResult, Error};
 
 pub type StoreConditionalOperator = ConditonalOperator;
 pub type StoreComparisonOperator = ComparisonOperator;
@@ -18,18 +17,24 @@ impl<'a> BasicAccountInfoStore<'a> {
         Self { db }
     }
 
-    pub async fn insert(&self, managed_account_info: &mut BasicAccountInfo) -> Option<Error> {
+    pub async fn insert(
+        &self,
+        managed_account_info: &mut BasicAccountInfo,
+    ) -> Option<PostgresError> {
         self.db.insert(managed_account_info).await
     }
 
-    pub async fn update(&self, managed_account_info: &mut BasicAccountInfo) -> Option<Error> {
+    pub async fn update(
+        &self,
+        managed_account_info: &mut BasicAccountInfo,
+    ) -> Option<PostgresError> {
         self.db.update(managed_account_info).await
     }
 
     pub async fn delete(
         &self,
         managed_account_info: &BasicAccountInfo,
-    ) -> Result<PgQueryResult, Error> {
+    ) -> Result<PostgresQueryResult, PostgresError> {
         self.db.delete(managed_account_info).await
     }
 
@@ -38,7 +43,7 @@ impl<'a> BasicAccountInfoStore<'a> {
         managed_account_info: &BasicAccountInfo,
         comparison: StoreComparisonOperator,
         conditional: StoreConditionalOperator,
-    ) -> Result<Vec<BasicAccountInfo>, Error> {
+    ) -> Result<Vec<BasicAccountInfo>, PostgresError> {
         self.db
             .search_all(managed_account_info, comparison, conditional)
             .await
@@ -49,7 +54,7 @@ impl<'a> BasicAccountInfoStore<'a> {
         managed_account_info: &BasicAccountInfo,
         comparison: StoreComparisonOperator,
         conditional: StoreConditionalOperator,
-    ) -> Result<BasicAccountInfo, Error> {
+    ) -> Result<BasicAccountInfo, PostgresError> {
         self.db
             .search(managed_account_info, comparison, conditional)
             .await

@@ -396,11 +396,9 @@ dependencies = [
  "fakeit",
  "hyper",
  "rand 0.8.5",
- "redis",
  "routerify",
  "serde",
  "serde_json",
- "sqlx",
  "tokio",
  "uuid 1.11.0",
 ]
