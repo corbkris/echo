@@ -1,6 +1,7 @@
 pub mod connection;
 mod connection_test;
 pub mod generic;
+pub mod models;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

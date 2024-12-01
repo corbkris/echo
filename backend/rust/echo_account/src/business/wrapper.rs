@@ -1,18 +1,11 @@
-use crate::business::accounts::service::Service as account_service;
-use crate::{
-    caches::redis::wrapper::EchoCache, queues::wrapper::EchoQue, stores::wrapper::EchoDatabase,
-};
-use std::sync::Arc;
-use tokio::sync::Mutex;
+use crate::business::accounts::service::Service as AccountService;
 
-pub struct Wrapper {
-    pub account_service: Arc<Mutex<account_service>>,
+pub struct Wrapper<'a> {
+    pub account_service: &'a AccountService<'a>,
 }
 
-impl Wrapper {
-    pub fn new(db: EchoDatabase, cache: EchoCache, que: EchoQue) -> Self {
-        Self {
-            account_service: Arc::new(Mutex::new(account_service::new(db, cache, que))),
-        }
+impl<'a> Wrapper<'a> {
+    pub fn new(account_service: &'a AccountService) -> Self {
+        Self { account_service }
     }
 }

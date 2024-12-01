@@ -1,27 +1,27 @@
-use crate::basic::{
-    delete, insert, search, update, ComparisonOperator, ConditonalOperator, ModelBuilder,
+use crate::{
+    basic::{delete, insert, search, update, ComparisonOperator, ConditonalOperator, ModelBuilder},
+    connection::PostgresPool,
 };
 use sqlx::{
-    postgres::{PgPool, PgQueryResult, PgRow},
+    postgres::{PgQueryResult, PgRow},
     query, query_as, Error, FromRow, Postgres,
 };
 
-#[derive(Clone)]
-pub struct DB {
-    pub pool: PgPool,
+pub struct DB<'a> {
+    pub pool: &'a PostgresPool,
 }
 
-impl DB {
-    pub fn new(pool: PgPool) -> Self {
+impl<'a> DB<'a> {
+    pub fn new(pool: &'a PostgresPool) -> Self {
         Self { pool }
     }
 
-    pub async fn insert<T>(&mut self, model: &mut T) -> Option<Error>
+    pub async fn insert<T>(&self, model: &mut T) -> Option<Error>
     where
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
     {
         match query_as::<Postgres, T>(&insert(model))
-            .fetch_one(&self.pool)
+            .fetch_one(self.pool)
             .await
         {
             Ok(updated_model) => {
@@ -32,12 +32,12 @@ impl DB {
         }
     }
 
-    pub async fn update<T>(&mut self, model: &mut T) -> Option<Error>
+    pub async fn update<T>(&self, model: &mut T) -> Option<Error>
     where
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
     {
         match query_as::<Postgres, T>(&update(model))
-            .fetch_one(&self.pool)
+            .fetch_one(self.pool)
             .await
         {
             Ok(updated_model) => {
@@ -48,15 +48,15 @@ impl DB {
         }
     }
 
-    pub async fn delete<T>(&mut self, model: &T) -> Result<PgQueryResult, Error>
+    pub async fn delete<T>(&self, model: &T) -> Result<PgQueryResult, Error>
     where
         T: ModelBuilder,
     {
-        query(&delete(model)).execute(&self.pool).await
+        query(&delete(model)).execute(self.pool).await
     }
 
     pub async fn search<T>(
-        &mut self,
+        &self,
         model: &T,
         comparison: ComparisonOperator,
         conditional: ConditonalOperator,
@@ -65,12 +65,12 @@ impl DB {
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
     {
         query_as::<Postgres, T>(&search(model, comparison, conditional))
-            .fetch_one(&self.pool)
+            .fetch_one(self.pool)
             .await
     }
 
     pub async fn search_all<T>(
-        &mut self,
+        &self,
         model: &T,
         comparison: ComparisonOperator,
         conditional: ConditonalOperator,
@@ -79,7 +79,7 @@ impl DB {
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
     {
         query_as::<Postgres, T>(&search(model, comparison, conditional))
-            .fetch_all(&self.pool)
+            .fetch_all(self.pool)
             .await
     }
 }

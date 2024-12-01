@@ -3,16 +3,14 @@ use crate::middleware::error::ApiError;
 use echo_account::business::accounts::service::Service as account_service;
 use hyper::{Body, Request, Response};
 use routerify::prelude::*;
-use std::sync::Arc;
-use tokio::sync::Mutex;
 
-pub struct State {
-    pub account_service: Arc<Mutex<account_service>>,
+pub struct AccountState<'a> {
+    pub account_service: &'a account_service<'a>,
 }
 
-impl State {
-    pub fn new(account_service: Arc<Mutex<account_service>>) -> Self {
-        State { account_service }
+impl<'a> AccountState<'a> {
+    pub fn new(account_service: &'a account_service) -> Self {
+        AccountState { account_service }
     }
 }
 
@@ -21,12 +19,10 @@ pub async fn signup(req: Request<Body>) -> Result<Response<Body>, ApiError> {
 
     let signup_data = marshal_signup(body).await?;
 
-    let state = parts.data::<Arc<Mutex<State>>>().unwrap().lock().await;
+    let state = parts.data::<AccountState>().unwrap();
 
     let secret_key = match state
         .account_service
-        .lock()
-        .await
         .signup(signup_data.email, signup_data.password)
         .await
     {
@@ -36,8 +32,6 @@ pub async fn signup(req: Request<Body>) -> Result<Response<Body>, ApiError> {
 
     let second_signup = state
         .account_service
-        .lock()
-        .await // Locking the account service again
         .signup(
             "another_email@example.com".to_string(),
             "another_password".to_string(),

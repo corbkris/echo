@@ -1,5 +1,5 @@
-use crate::caches::{account::Account as RedisAccount, redis::wrapper::EchoCache};
-use crate::queues::{email::EmailBody, wrapper::EchoQue};
+use crate::caches::{account::Account as RedisAccount, wrapper::EchoCache};
+use crate::queues::{email::EmailSigup, wrapper::EchoQue};
 use crate::stores::{
     account::{StoreComparisonOperator, StoreConditionalOperator},
     wrapper::EchoDatabase,
@@ -14,19 +14,18 @@ use bcrypt::{hash, DEFAULT_COST};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use uuid::Uuid;
 
-#[derive(Clone)]
-pub struct Service {
-    pub db: EchoDatabase,
-    pub cache: EchoCache,
-    pub que: EchoQue,
+pub struct Service<'a> {
+    pub db: &'a EchoDatabase<'a>,
+    pub cache: &'a EchoCache<'a>,
+    pub que: &'a EchoQue<'a>,
 }
 
-impl Service {
-    pub fn new(db: EchoDatabase, cache: EchoCache, que: EchoQue) -> Self {
+impl<'a> Service<'a> {
+    pub fn new(db: &'a EchoDatabase, cache: &'a EchoCache, que: &'a EchoQue) -> Self {
         Service { db, cache, que }
     }
 
-    pub async fn signup(&mut self, email: String, mut password: String) -> Result<String, String> {
+    pub async fn signup(&self, email: String, mut password: String) -> Result<String, String> {
         match self.find_by_email(&email).await {
             Ok(_) => return Err("email already exists".to_string()),
             Err(_) => {}
@@ -60,7 +59,7 @@ impl Service {
         match self
             .que
             .emails
-            .publish_email(&EmailBody::new(email, secret_code.to_string().to_string()))
+            .publish_email(&EmailSigup::new(email, secret_code.to_string().to_string()))
             .await
         {
             Ok(_) => Ok(signup_key),
@@ -68,11 +67,7 @@ impl Service {
         }
     }
 
-    pub async fn try_signup_code(
-        &mut self,
-        code: &str,
-        signup_key: &str,
-    ) -> Result<Account, String> {
+    pub async fn try_signup_code(&self, code: &str, signup_key: &str) -> Result<Account, String> {
         let account = match self.cache.accounts.get_signup(signup_key).await {
             Ok(account) => account,
             Err(err) => return Err(err.to_string()),
@@ -91,7 +86,7 @@ impl Service {
         }
     }
 
-    pub async fn login(&mut self, email: String, mut password: String) -> Result<Account, String> {
+    pub async fn login(&self, email: String, mut password: String) -> Result<Account, String> {
         password = match hash(password, DEFAULT_COST) {
             Ok(hashed) => hashed,
             Err(err) => return Err(err.to_string()),
@@ -111,7 +106,7 @@ impl Service {
         }
     }
 
-    async fn find_by_email(&mut self, email: &str) -> Result<Account, String> {
+    async fn find_by_email(&self, email: &str) -> Result<Account, String> {
         match self
             .db
             .accounts
@@ -127,7 +122,7 @@ impl Service {
         }
     }
 
-    pub async fn find_by_id(&mut self, id: &str) -> Result<Account, String> {
+    pub async fn find_by_id(&self, id: &str) -> Result<Account, String> {
         match self
             .db
             .accounts

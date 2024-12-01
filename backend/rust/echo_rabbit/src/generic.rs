@@ -1,24 +1,24 @@
 use amqprs::{
     channel::{BasicPublishArguments, Channel, QueueDeclareArguments},
-    connection::Connection,
     error::Error,
     BasicProperties,
 };
 
+use crate::connection::RabbitConnection;
+
 pub type RabbitChannel = Channel;
 pub type RabbitError = Error;
 
-#[derive(Clone)]
-pub struct Que {
-    connection: Connection,
+pub struct Que<'a> {
+    connection: &'a RabbitConnection,
 }
 
-impl Que {
-    pub fn new(connection: Connection) -> Self {
+impl<'a> Que<'a> {
+    pub fn new(connection: &'a RabbitConnection) -> Self {
         Self { connection }
     }
 
-    pub async fn create_channel(&mut self, que_name: &str) -> Result<RabbitChannel, RabbitError> {
+    pub async fn create_channel(&self, que_name: &str) -> Result<RabbitChannel, RabbitError> {
         match self.connection.open_channel(None).await {
             Ok(channel) => {
                 match channel
@@ -33,8 +33,8 @@ impl Que {
         }
     }
     pub async fn publish_message(
-        &mut self,
-        channel: RabbitChannel,
+        &self,
+        channel: &RabbitChannel,
         exchange: &str,
         routing_key: &str,
         payload: &str,

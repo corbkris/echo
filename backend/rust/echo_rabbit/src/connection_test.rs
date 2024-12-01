@@ -1,12 +1,11 @@
 #[cfg(test)]
 mod tests {
-    use crate::connection::{BasicConnection, Config};
+    use crate::connection::Config;
 
     #[tokio::test]
     async fn test_connection() {
-        let config = Config::new();
-        let conn = BasicConnection::new(config).await;
+        let connection = Config::new().connect().await;
 
-        assert!(conn.is_ok());
+        assert!(connection.is_ok());
     }
 }
