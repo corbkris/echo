@@ -1,5 +1,6 @@
 use redis::{Client, RedisError};
 use std::env;
+pub type RedisClient = Client;
 
 pub struct Config {
     host: String,
@@ -28,17 +29,8 @@ impl Config {
     pub fn connection_string_develop(&self) -> String {
         format!("redis://{}:{}", self.host, self.port)
     }
-}
 
-pub struct BasicClient {
-    pub client: Client,
-}
-
-impl BasicClient {
-    pub fn new(config: Config) -> Result<Self, RedisError> {
-        match Client::open(config.connection_string_develop().as_str()) {
-            Ok(client) => return Ok(Self { client }),
-            Err(err) => return Err(err),
-        };
+    pub fn connect(&self) -> Result<RedisClient, RedisError> {
+        Client::open(self.connection_string_develop().as_str())
     }
 }

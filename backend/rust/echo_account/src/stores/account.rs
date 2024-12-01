@@ -1,61 +1,49 @@
 use echo_sql::{
     basic::{ComparisonOperator, ConditonalOperator},
-    generic::DB,
+    generic::{PostgresError, PostgresQueryResult, DB},
     models::account::Account as ModelAccount,
 };
-use sqlx::{postgres::PgQueryResult, Error};
 
 pub type StoreConditionalOperator = ConditonalOperator;
 pub type StoreComparisonOperator = ComparisonOperator;
 pub type Account = ModelAccount;
-use std::sync::Arc;
-use tokio::sync::Mutex;
 
-#[derive(Clone)]
-pub struct AccountStore {
-    db: Arc<Mutex<DB>>,
+pub struct AccountStore<'a> {
+    db: &'a DB<'a>,
 }
 
-impl AccountStore {
-    pub fn new(db: Arc<Mutex<DB>>) -> Self {
+impl<'a> AccountStore<'a> {
+    pub fn new(db: &'a DB) -> Self {
         Self { db }
     }
 
-    pub async fn insert(&mut self, account: &mut Account) -> Option<Error> {
-        self.db.lock().await.insert(account).await
+    pub async fn insert(&self, account: &mut Account) -> Option<PostgresError> {
+        self.db.insert(account).await
     }
 
-    pub async fn update(&mut self, account: &mut Account) -> Option<Error> {
-        self.db.lock().await.update(account).await
+    pub async fn update(&self, account: &mut Account) -> Option<PostgresError> {
+        self.db.update(account).await
     }
 
-    pub async fn delete(&mut self, account: &Account) -> Result<PgQueryResult, Error> {
-        self.db.lock().await.delete(account).await
+    pub async fn delete(&self, account: &Account) -> Result<PostgresQueryResult, PostgresError> {
+        self.db.delete(account).await
     }
 
     pub async fn basic_search(
-        &mut self,
+        &self,
         account: &Account,
         comparison: StoreComparisonOperator,
         conditional: StoreConditionalOperator,
-    ) -> Result<Vec<Account>, Error> {
-        self.db
-            .lock()
-            .await
-            .search_all(account, comparison, conditional)
-            .await
+    ) -> Result<Vec<Account>, PostgresError> {
+        self.db.search_all(account, comparison, conditional).await
     }
 
     pub async fn basic_search_single(
-        &mut self,
+        &self,
         account: &Account,
         comparison: StoreComparisonOperator,
         conditional: StoreConditionalOperator,
-    ) -> Result<Account, Error> {
-        self.db
-            .lock()
-            .await
-            .search(account, comparison, conditional)
-            .await
+    ) -> Result<Account, PostgresError> {
+        self.db.search(account, comparison, conditional).await
     }
 }

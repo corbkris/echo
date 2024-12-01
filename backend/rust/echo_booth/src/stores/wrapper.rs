@@ -1,14 +1,11 @@
 use crate::stores::booth::BoothStore;
-use echo_sql::generic::DB;
 
-pub struct Database {
-    pub booths: BoothStore,
+pub struct EchoDatabase<'a> {
+    pub booths: &'a BoothStore<'a>,
 }
 
-impl Database {
-    pub fn new(db: DB) -> Self {
-        Self {
-            booths: BoothStore::new(db),
-        }
+impl<'a> EchoDatabase<'a> {
+    pub fn new(booths: &'a BoothStore<'a>) -> Self {
+        Self { booths }
     }
 }

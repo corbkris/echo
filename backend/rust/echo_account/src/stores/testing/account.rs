@@ -1,8 +1,8 @@
-use crate::assembly::setup::Common;
-use crate::stores::account::Account;
+use crate::stores::testing::test::Common;
+use echo_sql::models::account::Account;
 
-impl Common {
-    pub async fn create_account(&mut self) -> Account {
+impl<'a> Common<'a> {
+    pub async fn create_account(&self) -> Account {
         let mut account = Account::new(
             "".to_string(),
             fakeit::internet::username(),

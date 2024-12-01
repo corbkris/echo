@@ -5,6 +5,8 @@ use sqlx::{
 };
 use std::env;
 
+pub type PostgresPool = PgPool;
+
 pub struct Config {
     name: String,
     host: String,
@@ -30,14 +32,14 @@ impl Config {
         }
     }
 
-    fn connection_string(&self) -> String {
+    pub fn connection_string(&self) -> String {
         format!(
             "postgresql://{}:{}@{}:{}/{}",
             self.user, self.password, self.host, self.port, self.name
         )
     }
 
-    pub async fn connect(&self) -> Result<PgPool, Error> {
+    pub async fn connect(&self) -> Result<PostgresPool, Error> {
         PgPoolOptions::new()
             .max_connections(5)
             .connect(&self.connection_string())

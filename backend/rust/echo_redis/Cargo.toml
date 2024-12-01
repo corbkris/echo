@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 tokio = { version = "1", features = ["full"] }
 redis = { version = "0.25.3", features = ["tokio-comp", "json"] }
+serde = { version = "1.0", features = ["derive"] }

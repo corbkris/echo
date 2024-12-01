@@ -1,46 +1,46 @@
 use echo_sql::{
     basic::{ComparisonOperator, ConditonalOperator},
-    generic::DB,
-    models::booth::Booth,
+    generic::{PostgresError, PostgresQueryResult, DB},
+    models::booth::Booth as ModelBooth,
 };
-use sqlx::{postgres::PgQueryResult, Error};
+pub type Booth = ModelBooth;
 
-pub struct BoothStore {
-    db: DB,
+pub struct BoothStore<'a> {
+    db: &'a DB<'a>,
 }
 
-impl BoothStore {
-    pub fn new(db: DB) -> Self {
+impl<'a> BoothStore<'a> {
+    pub fn new(db: &'a DB) -> Self {
         Self { db }
     }
 
-    pub async fn insert(&mut self, booth: &mut Booth) -> Option<Error> {
+    pub async fn insert(&self, booth: &mut Booth) -> Option<PostgresError> {
         self.db.insert(booth).await
     }
 
-    pub async fn update(&mut self, booth: &mut Booth) -> Option<Error> {
+    pub async fn update(&self, booth: &mut Booth) -> Option<PostgresError> {
         self.db.update(booth).await
     }
 
-    pub async fn delete(&mut self, booth: &Booth) -> Result<PgQueryResult, Error> {
+    pub async fn delete(&self, booth: &Booth) -> Result<PostgresQueryResult, PostgresError> {
         self.db.delete(booth).await
     }
 
     pub async fn basic_search(
-        &mut self,
+        &self,
         booth: &Booth,
         comparison: ComparisonOperator,
         conditional: ConditonalOperator,
-    ) -> Result<Vec<Booth>, Error> {
+    ) -> Result<Vec<Booth>, PostgresError> {
         self.db.search_all(booth, comparison, conditional).await
     }
 
     pub async fn basic_search_single(
-        &mut self,
+        &self,
         booth: &Booth,
         comparison: ComparisonOperator,
         conditional: ConditonalOperator,
-    ) -> Result<Booth, Error> {
+    ) -> Result<Booth, PostgresError> {
         self.db.search(booth, comparison, conditional).await
     }
 }

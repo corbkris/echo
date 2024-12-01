@@ -4,6 +4,8 @@ use amqprs::{
 };
 use std::env;
 
+pub type RabbitConnection = Connection;
+
 pub struct Config {
     host: String,
     port: u16,
@@ -22,30 +24,14 @@ impl Config {
             vhost: env::var("RABBIT_VHOST").unwrap(),
         }
     }
-}
-
-pub struct BasicConnection {
-    pub connection: Connection,
-}
-
-impl BasicConnection {
-    pub async fn new(config: Config) -> Result<Self, Error> {
-        match Connection::open(
-            &OpenConnectionArguments::new(
-                &config.host,
-                config.port,
-                &config.user,
-                &config.password,
-            )
-            .virtual_host(&config.vhost),
+    pub async fn connect(&self) -> Result<RabbitConnection, Error> {
+        Connection::open(
+            &OpenConnectionArguments::new(&self.host, self.port, &self.user, &self.password)
+                .virtual_host(&self.vhost),
         )
         .await
-        {
-            Ok(connection) => Ok(Self { connection }),
-            Err(err) => Err(err),
-        }
     }
-    pub async fn close_connection(self) -> Result<(), Error> {
-        self.connection.close().await
+    pub async fn close_connection(&self, connection: RabbitConnection) -> Result<(), Error> {
+        connection.close().await
     }
 }

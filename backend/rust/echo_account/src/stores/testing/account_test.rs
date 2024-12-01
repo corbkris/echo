@@ -1,27 +1,16 @@
 #[cfg(test)]
 mod tests {
-    use std::cell::RefCell;
 
-    use crate::assembly::setup::Common;
     use echo_sql::basic::{ComparisonOperator, ConditonalOperator, ModelBuilder};
     use echo_sql::models::account::Account;
-    use fakeit::{internet, password};
+    use std::cell::RefCell;
 
-    async fn test_setup_common() -> Common {
-        let common = match Common::new().await {
-            Ok(common) => common,
-            Err(err) => {
-                panic!("{}", err)
-            }
-        };
-        return common;
-    }
+    use crate::stores::testing::test::Common;
+    use fakeit::{internet, password};
 
     #[tokio::test]
     async fn test_user_insert() {
-        let common = test_setup_common().await;
-
-        let mut accounts = common.db.accounts;
+        let common = Common::new().await;
         let mut account = Account::new(
             "".to_string(),
             internet::username(),
@@ -29,15 +18,15 @@ mod tests {
             None,
             None,
         );
-        let result = accounts.insert(&mut account).await;
+        let result = common.db.accounts.insert(&mut account).await;
         assert!(result.is_none());
         assert_ne!(account.id, "");
     }
 
     #[tokio::test]
     async fn test_user_update() {
+        let common = Common::new().await;
         let updated_password = RefCell::new(password::generate(true, true, true, 8));
-        let mut common = test_setup_common().await;
         let mut account = common.create_account().await;
         account.password = updated_password.borrow().to_string();
         let result = common.db.accounts.update(&mut account).await;
@@ -58,7 +47,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_user_delete() {
-        let mut common = test_setup_common().await;
+        let common = Common::new().await;
         let account = common.create_account().await;
         assert!(common.db.accounts.delete(&account).await.is_ok());
         let result = common
@@ -75,7 +64,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_user_delete_full() {
-        let mut common = test_setup_common().await;
+        let common = Common::new().await;
         let account = common.create_account().await;
         assert!(common.db.accounts.delete(&account).await.is_ok());
         let result = common

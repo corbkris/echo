@@ -1,15 +1,11 @@
 use crate::queues::email::EmailQue;
-use echo_rabbit::generic::Que;
 
-#[derive(Clone)]
-pub struct EchoQue {
-    pub emails: EmailQue,
+pub struct EchoQue<'a> {
+    pub emails: &'a EmailQue<'a>,
 }
 
-impl EchoQue {
-    pub async fn new(que: Que) -> Self {
-        Self {
-            emails: EmailQue::new(que).await, //handle error eventually
-        }
+impl<'a> EchoQue<'a> {
+    pub fn new(emails: &'a EmailQue<'a>) -> Self {
+        Self { emails }
     }
 }

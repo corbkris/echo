@@ -13,7 +13,7 @@ mod tests {
                 panic!("{}", err)
             }
         };
-        let mut db = DB::new(conn);
+        let db = DB::new(&conn);
         let mut account = Account::new(
             "".to_string(),
             "cardboard1234".to_string(),

@@ -1,18 +1,20 @@
 use redis::AsyncCommands;
-use redis::Client;
 use redis::RedisError;
 
-#[derive(Clone)]
-pub struct Cache {
-    client: Client,
+use crate::connection::RedisClient;
+
+pub type CacheError = RedisError;
+
+pub struct Cache<'a> {
+    client: &'a RedisClient,
 }
 
-impl Cache {
-    pub fn new(client: Client) -> Self {
+impl<'a> Cache<'a> {
+    pub fn new(client: &'a RedisClient) -> Self {
         Self { client }
     }
 
-    pub async fn get(&mut self, key: String) -> Result<String, RedisError> {
+    pub async fn get(&self, key: &String) -> Result<String, CacheError> {
         let mut conn = match self.client.get_multiplexed_async_connection().await {
             Ok(conn) => conn,
             Err(err) => return Err(err),
@@ -20,7 +22,7 @@ impl Cache {
         conn.get(key).await
     }
 
-    pub async fn set(&mut self, key: String, value: String) -> Result<String, RedisError> {
+    pub async fn set(&self, key: &String, value: &String) -> Result<String, CacheError> {
         let mut conn = match self.client.get_multiplexed_async_connection().await {
             Ok(conn) => conn,
             Err(err) => return Err(err),
@@ -28,7 +30,7 @@ impl Cache {
         conn.set(key, value).await
     }
 
-    pub async fn incr(&mut self, key: String) -> Result<String, RedisError> {
+    pub async fn incr(&self, key: &String) -> Result<String, CacheError> {
         let mut conn = match self.client.get_multiplexed_async_connection().await {
             Ok(conn) => conn,
             Err(err) => return Err(err),
@@ -37,11 +39,11 @@ impl Cache {
     }
 
     pub async fn set_exp(
-        &mut self,
-        key: String,
-        value: String,
+        &self,
+        key: &String,
+        value: &String,
         exp: i64,
-    ) -> Result<String, RedisError> {
+    ) -> Result<String, CacheError> {
         let mut conn = match self.client.get_multiplexed_async_connection().await {
             Ok(conn) => conn,
             Err(err) => return Err(err),
@@ -57,7 +59,7 @@ impl Cache {
         }
     }
 
-    pub async fn incr_exp(&mut self, key: String, exp: i64) -> Result<String, RedisError> {
+    pub async fn incr_exp(&self, key: &String, exp: i64) -> Result<String, CacheError> {
         let mut conn = match self.client.get_multiplexed_async_connection().await {
             Ok(conn) => conn,
             Err(err) => return Err(err),
