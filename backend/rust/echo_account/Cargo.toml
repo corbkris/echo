@@ -10,9 +10,9 @@ edition = "2021"
 name = "account_api"
 path = "api/main.rs"
 
-#[[bin]]
-#name = "account_cmd"
-#path = "cmd/main.rs"
+[[bin]]
+name = "account_cmd"
+path = "cmd/main.rs"
 
 [dependencies]
 echo_sql = {path = "../echo_sql"}

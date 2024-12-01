@@ -2,5 +2,5 @@
 resolver = "2"
 
 members = [ 
-	"echo_sql", "echo_account", "echo_redis", "echo_rabbit", "echo_jwt",
+	"echo_sql", "echo_account", "echo_redis", "echo_rabbit", "echo_jwt", "echo_booth",
 ]

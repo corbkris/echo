@@ -10,7 +10,7 @@ pub struct AccountState<'a> {
 
 impl<'a> AccountState<'a> {
     pub fn new(account_service: &'a account_service) -> Self {
-        AccountState { account_service }
+        Self { account_service }
     }
 }
 
