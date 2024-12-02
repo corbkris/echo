@@ -77,8 +77,11 @@ impl<'a> Service<'a> {
             return Err("invalid code".to_string());
         }
 
-        let mut marshaled_account =
-            marshal(Account::email_password(account.email, account.password));
+        let mut marshaled_account = marshal(Account {
+            email: account.email,
+            password: account.password,
+            ..Default::default()
+        });
 
         match self.db.accounts.insert(&mut marshaled_account).await {
             None => Ok(unmarshal(marshaled_account)),
@@ -95,7 +98,11 @@ impl<'a> Service<'a> {
             .db
             .accounts
             .basic_search_single(
-                &marshal(Account::email_password(email, password)),
+                &marshal(Account {
+                    email,
+                    password,
+                    ..Default::default()
+                }),
                 StoreComparisonOperator::Equal,
                 StoreConditionalOperator::AND,
             )
@@ -111,7 +118,10 @@ impl<'a> Service<'a> {
             .db
             .accounts
             .basic_search_single(
-                &marshal(Account::email(email.to_string())),
+                &marshal(Account {
+                    email: email.to_string(),
+                    ..Default::default()
+                }),
                 StoreComparisonOperator::Equal,
                 StoreConditionalOperator::Basic,
             )
@@ -127,7 +137,10 @@ impl<'a> Service<'a> {
             .db
             .accounts
             .basic_search_single(
-                &marshal(Account::id(id.to_string())),
+                &marshal(Account {
+                    id: id.to_string(),
+                    ..Default::default()
+                }),
                 StoreComparisonOperator::Equal,
                 StoreConditionalOperator::Basic,
             )
