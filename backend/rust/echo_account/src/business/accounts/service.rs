@@ -1,3 +1,4 @@
+use crate::business::errors::ServiceError;
 use crate::caches::{account::Account as RedisAccount, wrapper::EchoCache};
 use crate::queues::{email::EmailSigup, wrapper::EchoQue};
 use crate::stores::{
@@ -25,15 +26,19 @@ impl<'a> Service<'a> {
         Service { db, cache, que }
     }
 
-    pub async fn signup(&self, email: String, mut password: String) -> Result<String, String> {
+    pub async fn signup(
+        &self,
+        email: String,
+        mut password: String,
+    ) -> Result<String, ServiceError> {
         match self.find_by_email(&email).await {
-            Ok(_) => return Err("email already exists".to_string()),
+            Ok(_) => return Err(ServiceError::Generic("email already exists".to_string())),
             Err(_) => {}
         };
 
         password = match hash(password, DEFAULT_COST) {
             Ok(hashed) => hashed,
-            Err(err) => return Err(err.to_string()),
+            Err(err) => return Err(ServiceError::Generic(err.to_string())),
         };
         let secret_code: String = thread_rng()
             .sample_iter(&Alphanumeric)
@@ -53,7 +58,7 @@ impl<'a> Service<'a> {
             .await
         {
             Ok(_) => {}
-            Err(err) => return Err(err.to_string()),
+            Err(err) => return Err(ServiceError::Redis(err)),
         }
 
         match self
@@ -63,18 +68,22 @@ impl<'a> Service<'a> {
             .await
         {
             Ok(_) => Ok(signup_key),
-            Err(err) => Err(err.to_string()),
+            Err(err) => Err(ServiceError::Rabbit(err)),
         }
     }
 
-    pub async fn try_signup_code(&self, code: &str, signup_key: &str) -> Result<Account, String> {
+    pub async fn try_signup_code(
+        &self,
+        code: &str,
+        signup_key: &str,
+    ) -> Result<Account, ServiceError> {
         let account = match self.cache.accounts.get_signup(signup_key).await {
             Ok(account) => account,
-            Err(err) => return Err(err.to_string()),
+            Err(err) => return Err(ServiceError::Generic(err)),
         };
 
         if account.code != code {
-            return Err("invalid code".to_string());
+            return Err(ServiceError::Generic("invalid code".to_string()));
         }
 
         let mut marshaled_account = marshal(Account {
@@ -85,14 +94,18 @@ impl<'a> Service<'a> {
 
         match self.db.accounts.insert(&mut marshaled_account).await {
             None => Ok(unmarshal(marshaled_account)),
-            Some(err) => Err(err.to_string()),
+            Some(err) => Err(ServiceError::Postgres(err)),
         }
     }
 
-    pub async fn login(&self, email: String, mut password: String) -> Result<Account, String> {
+    pub async fn login(
+        &self,
+        email: String,
+        mut password: String,
+    ) -> Result<Account, ServiceError> {
         password = match hash(password, DEFAULT_COST) {
             Ok(hashed) => hashed,
-            Err(err) => return Err(err.to_string()),
+            Err(err) => return Err(ServiceError::Generic(err.to_string())),
         };
         match self
             .db
@@ -109,11 +122,11 @@ impl<'a> Service<'a> {
             .await
         {
             Ok(account) => Ok(unmarshal(account)),
-            Err(err) => Err(err.to_string()),
+            Err(err) => Err(ServiceError::Postgres(err)),
         }
     }
 
-    async fn find_by_email(&self, email: &str) -> Result<Account, String> {
+    async fn find_by_email(&self, email: &str) -> Result<Account, ServiceError> {
         match self
             .db
             .accounts
@@ -128,11 +141,11 @@ impl<'a> Service<'a> {
             .await
         {
             Ok(account) => return Ok(unmarshal(account)),
-            Err(err) => return Err(err.to_string()),
+            Err(err) => return Err(ServiceError::Postgres(err)),
         }
     }
 
-    pub async fn find_by_id(&self, id: &str) -> Result<Account, String> {
+    pub async fn find_by_id(&self, id: &str) -> Result<Account, ServiceError> {
         match self
             .db
             .accounts
@@ -147,7 +160,7 @@ impl<'a> Service<'a> {
             .await
         {
             Ok(account) => return Ok(unmarshal(account)),
-            Err(err) => return Err(err.to_string()),
+            Err(err) => return Err(ServiceError::Postgres(err)),
         }
     }
 }

@@ -1,5 +1,5 @@
 use echo_redis::{
-    generic::{Cache, CacheError},
+    generic::{Cache, RedisError},
     models::account::Account as CacheAccount,
 };
 use serde_json;
@@ -17,17 +17,17 @@ impl<'a> AccountCache<'a> {
         Self { cache }
     }
 
-    pub async fn set(&self, key: &String, value: &String) -> Result<String, CacheError> {
+    pub async fn set(&self, key: &String, value: &String) -> Result<String, RedisError> {
         self.cache
             .set(&vec![BASE_RATE_LIMIT, key].join("::"), value)
             .await
     }
 
-    pub async fn get(&self, key: &String) -> Result<String, CacheError> {
+    pub async fn get(&self, key: &String) -> Result<String, RedisError> {
         self.cache.get(&vec![BASE_RATE_LIMIT, key].join("::")).await
     }
 
-    pub async fn set_signup(&self, key: &String, value: &Account) -> Result<String, CacheError> {
+    pub async fn set_signup(&self, key: &String, value: &Account) -> Result<String, RedisError> {
         self.cache
             .set_exp(
                 &vec![BASE_SIGNUP, key].join("::"),

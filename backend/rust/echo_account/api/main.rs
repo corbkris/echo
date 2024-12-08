@@ -32,12 +32,10 @@ use tokio::runtime::Runtime;
 
 #[tokio::main]
 async fn main() {
-    // Create a Service from the router above to handle incoming requests.
+    static RT: LazyLock<Runtime> = LazyLock::new(|| Runtime::new().unwrap());
 
-    static POSTGRES_POOL: LazyLock<PostgresPool> = LazyLock::new(|| {
-        let rt = Runtime::new().unwrap();
-        rt.block_on(async { DBConfig::new().connect().await.unwrap() })
-    });
+    static POSTGRES_POOL: LazyLock<PostgresPool> =
+        LazyLock::new(|| RT.block_on(async { DBConfig::new().connect().await.unwrap() }));
     static POSTGRES_DB: LazyLock<DB> = LazyLock::new(|| DB::new(&POSTGRES_POOL));
     static ACCOUNT_STORE: LazyLock<AccountStore> =
         LazyLock::new(|| AccountStore::new(&POSTGRES_DB));
@@ -65,14 +63,11 @@ async fn main() {
     static CACHE: LazyLock<EchoCache> = LazyLock::new(|| EchoCache::new(&ACCOUNT_CACHE));
 
     //rabbit
-    static RABBIT_CONNECTION: LazyLock<RabbitConnection> = LazyLock::new(|| {
-        let rt = Runtime::new().unwrap();
-        rt.block_on(async { RabbitConfig::new().connect().await.unwrap() })
-    });
+    static RABBIT_CONNECTION: LazyLock<RabbitConnection> =
+        LazyLock::new(|| RT.block_on(async { RabbitConfig::new().connect().await.unwrap() }));
     static RABBIT_QUE: LazyLock<Que> = LazyLock::new(|| Que::new(&RABBIT_CONNECTION));
     static EMAIL_CHANNEL: LazyLock<RabbitChannel> = LazyLock::new(|| {
-        let rt = Runtime::new().unwrap();
-        rt.block_on(async { RABBIT_QUE.create_channel("email_channel").await.unwrap() })
+        RT.block_on(async { RABBIT_QUE.create_channel("email_channel").await.unwrap() })
     });
     static EMAIL_QUE: LazyLock<EmailQue> =
         LazyLock::new(|| EmailQue::new(&RABBIT_QUE, &EMAIL_CHANNEL));
@@ -83,7 +78,7 @@ async fn main() {
         LazyLock::new(|| AccountService::new(&DB, &CACHE, &QUE));
     static SERVICES: LazyLock<Wrapper> = LazyLock::new(|| Wrapper::new(&ACCOUNT_SERVICE));
 
-    let service = RouterService::new(
+    let router = RouterService::new(
         Router::builder()
             .scope(
                 "/accounts",
@@ -104,10 +99,21 @@ async fn main() {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
     // Create a server by passing the created service to `.serve` method.
-    let server = Server::bind(&addr).serve(service);
+    let server = Server::bind(&addr).serve(router);
 
     println!("App is running on: {}", addr);
-    if let Err(err) = server.await {
-        eprintln!("Server error: {}", err);
+    let server_future = tokio::spawn(server);
+
+    // Graceful shutdown on Ctrl+C
+    tokio::select! {
+        _ = tokio::signal::ctrl_c() => {
+            println!("Shutting down gracefully...");
+            // Drop or close resources here, if needed
+            // For example: close DB connections, cache clients, etc.
+            // Since you are using LazyLock, the resources should be dropped when the program exits
+        },
+        _ = server_future => {
+            println!("Server exited.");
+        },
     }
 }

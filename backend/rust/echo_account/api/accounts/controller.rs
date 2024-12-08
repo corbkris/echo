@@ -27,7 +27,7 @@ pub async fn signup(req: Request<Body>) -> Result<Response<Body>, ApiError> {
         .await
     {
         Ok(secret_key) => secret_key,
-        Err(_) => return Err(ApiError::Generic("Failed to signup user".into())),
+        Err(err) => return Err(ApiError::Generic(format!("Failed to signup user, {}", err))),
     };
 
     let second_signup = state

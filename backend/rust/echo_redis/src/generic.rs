@@ -1,9 +1,9 @@
 use redis::AsyncCommands;
-use redis::RedisError;
+use redis::RedisError as Error;
 
 use crate::connection::RedisClient;
 
-pub type CacheError = RedisError;
+pub type RedisError = Error;
 
 pub struct Cache<'a> {
     client: &'a RedisClient,
@@ -14,7 +14,7 @@ impl<'a> Cache<'a> {
         Self { client }
     }
 
-    pub async fn get(&self, key: &String) -> Result<String, CacheError> {
+    pub async fn get(&self, key: &String) -> Result<String, RedisError> {
         let mut conn = match self.client.get_multiplexed_async_connection().await {
             Ok(conn) => conn,
             Err(err) => return Err(err),
@@ -22,7 +22,7 @@ impl<'a> Cache<'a> {
         conn.get(key).await
     }
 
-    pub async fn set(&self, key: &String, value: &String) -> Result<String, CacheError> {
+    pub async fn set(&self, key: &String, value: &String) -> Result<String, RedisError> {
         let mut conn = match self.client.get_multiplexed_async_connection().await {
             Ok(conn) => conn,
             Err(err) => return Err(err),
@@ -30,7 +30,7 @@ impl<'a> Cache<'a> {
         conn.set(key, value).await
     }
 
-    pub async fn incr(&self, key: &String) -> Result<String, CacheError> {
+    pub async fn incr(&self, key: &String) -> Result<String, RedisError> {
         let mut conn = match self.client.get_multiplexed_async_connection().await {
             Ok(conn) => conn,
             Err(err) => return Err(err),
@@ -43,7 +43,7 @@ impl<'a> Cache<'a> {
         key: &String,
         value: &String,
         exp: i64,
-    ) -> Result<String, CacheError> {
+    ) -> Result<String, RedisError> {
         let mut conn = match self.client.get_multiplexed_async_connection().await {
             Ok(conn) => conn,
             Err(err) => return Err(err),
@@ -59,7 +59,7 @@ impl<'a> Cache<'a> {
         }
     }
 
-    pub async fn incr_exp(&self, key: &String, exp: i64) -> Result<String, CacheError> {
+    pub async fn incr_exp(&self, key: &String, exp: i64) -> Result<String, RedisError> {
         let mut conn = match self.client.get_multiplexed_async_connection().await {
             Ok(conn) => conn,
             Err(err) => return Err(err),
