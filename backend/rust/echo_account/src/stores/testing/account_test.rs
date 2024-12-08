@@ -5,8 +5,9 @@ mod tests {
     use echo_sql::models::account::Account;
     use std::cell::RefCell;
 
-    use crate::stores::testing::test::Common;
     use fakeit::{internet, password};
+
+    use crate::assembly::setup::Common;
 
     #[tokio::test]
     async fn test_user_insert() {

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::business::testing::test::Common;
+    use crate::assembly::setup::Common;
 
     #[tokio::test]
     async fn test_set() {

@@ -1,5 +1,6 @@
-use crate::stores::testing::test::Common;
 use echo_sql::models::account::Account;
+
+use crate::assembly::setup::Common;
 
 impl<'a> Common<'a> {
     pub async fn create_account(&self) -> Account {

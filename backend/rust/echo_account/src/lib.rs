@@ -1,5 +1,4 @@
-/*pub mod assembly;
-*/
+pub mod assembly;
 pub mod business;
 pub mod caches;
 pub mod queues;

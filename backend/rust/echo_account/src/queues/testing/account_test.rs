@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
 
-    use crate::queues::{email::EmailSigup, testing::test::Common};
+    use crate::{assembly::setup::Common, queues::email::EmailSigup};
     #[tokio::test]
     async fn test_set() {
         let common = Common::new().await;
