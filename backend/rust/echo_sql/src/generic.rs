@@ -9,6 +9,14 @@ use sqlx::{
 pub type PostgresError = Error;
 pub type PostgresQueryResult = PgQueryResult;
 
+#[derive(Debug)]
+pub enum Argument {
+    Int(i32),
+    Str(String),
+    Float(f64),
+    Bool(bool),
+}
+
 pub struct DB<'a> {
     pub pool: &'a PostgresPool,
 }
@@ -83,5 +91,48 @@ impl<'a> DB<'a> {
         query_as::<Postgres, T>(&search(model, comparison, conditional))
             .fetch_all(self.pool)
             .await
+    }
+
+    /// Example
+    /// let id = 123;
+    /// let active = true;
+    /// let query = "SELECT * FROM users WHERE id = $1 AND active = $2";
+    /// let mut args = vec![Argument::Int(5)];
+    /// args.push(Argument::Bool(true));
+    /// let result = self.query(query.to_string(), arguments).await?;
+    pub async fn query<T>(&self, query: &str, args: Vec<Argument>) -> Result<T, PostgresError>
+    where
+        T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
+    {
+        let mut query = query_as::<Postgres, T>(query);
+        for arg in args {
+            match arg {
+                Argument::Int(i) => query = query.bind(i),
+                Argument::Str(s) => query = query.bind(s),
+                Argument::Float(f) => query = query.bind(f),
+                Argument::Bool(b) => query = query.bind(b),
+            }
+        }
+        query.fetch_one(self.pool).await
+    }
+
+    pub async fn query_all<T>(
+        &self,
+        query: String,
+        args: Vec<Argument>,
+    ) -> Result<Vec<T>, PostgresError>
+    where
+        T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
+    {
+        let mut query = query_as::<Postgres, T>(&query);
+        for arg in args {
+            match arg {
+                Argument::Int(i) => query = query.bind(i),
+                Argument::Str(s) => query = query.bind(s),
+                Argument::Float(f) => query = query.bind(f),
+                Argument::Bool(b) => query = query.bind(b),
+            }
+        }
+        query.fetch_all(self.pool).await
     }
 }

@@ -1,6 +1,6 @@
 use echo_sql::{
     basic::{ComparisonOperator, ConditonalOperator},
-    generic::{PostgresError, PostgresQueryResult, DB},
+    generic::{Argument, PostgresError, PostgresQueryResult, DB},
     models::account::Account as ModelAccount,
 };
 
@@ -45,5 +45,14 @@ impl<'a> AccountStore<'a> {
         conditional: StoreConditionalOperator,
     ) -> Result<Account, PostgresError> {
         self.db.search(account, comparison, conditional).await
+    }
+
+    pub async fn get_by_id(&self) -> Result<Account, PostgresError> {
+        let query = "";
+
+        let mut args = vec![Argument::Int(5), Argument::Int(5)];
+        args.push(Argument::Bool(true));
+
+        self.db.query(query, args).await
     }
 }
