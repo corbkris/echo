@@ -20,10 +20,7 @@ use echo_rabbit::{
     generic::{Que, RabbitChannel},
 };
 
-use crate::queues::{
-    email::{EmailQue, EMAIL_QUE_NAME},
-    wrapper::EchoQue,
-};
+use crate::queues::{email::EmailQue, wrapper::EchoQue};
 
 use crate::business::{accounts::service::Service as AccountService, wrapper::Wrapper};
 
@@ -43,8 +40,8 @@ pub static ECHO_ACCOUNT_CACHE: OnceCell<AccountCache> = OnceCell::const_new();
 pub static ECHO_QUEUES: OnceCell<EchoQue> = OnceCell::const_new();
 pub static QUE_CONNECTION: OnceCell<RabbitConnection> = OnceCell::const_new();
 pub static QUE_QUEUE: OnceCell<Que> = OnceCell::const_new();
-pub static QUE_EMAIL_CHANNEL: OnceCell<RabbitChannel> = OnceCell::const_new();
 pub static QUE_EMAIL_QUEUE: OnceCell<EmailQue> = OnceCell::const_new();
+pub static QUE_EMAIL_CHANNEL: OnceCell<RabbitChannel> = OnceCell::const_new();
 
 pub static ECHO_SERVICES: OnceCell<Wrapper> = OnceCell::const_new();
 pub static ECHO_ACCOUNT_SERVICES: OnceCell<AccountService> = OnceCell::const_new();
@@ -187,11 +184,19 @@ async fn set_que() {
     QUE_QUEUE.get_or_init(get_que).await;
 }
 
-async fn get_email_channel() -> RabbitChannel {
-    QUE_QUEUE
+async fn get_email_que<'a>() -> EmailQue<'a> {
+    EmailQue::new(QUE_QUEUE.get().unwrap())
+}
+
+async fn set_email_que() {
+    QUE_EMAIL_QUEUE.get_or_init(get_email_que).await;
+}
+
+async fn get_email_channel<'a>() -> RabbitChannel {
+    QUE_EMAIL_QUEUE
         .get()
         .unwrap()
-        .create_channel(EMAIL_QUE_NAME)
+        .create_email_channel()
         .await
         .unwrap()
 }
@@ -200,16 +205,11 @@ async fn set_email_channel() {
     QUE_EMAIL_CHANNEL.get_or_init(get_email_channel).await;
 }
 
-async fn get_email_que<'a>() -> EmailQue<'a> {
-    EmailQue::new(QUE_QUEUE.get().unwrap(), QUE_EMAIL_CHANNEL.get().unwrap())
-}
-
-async fn set_email_que() {
-    QUE_EMAIL_QUEUE.get_or_init(get_email_que).await;
-}
-
 async fn get_echo_que<'a>() -> EchoQue<'a> {
-    EchoQue::new(QUE_EMAIL_QUEUE.get().unwrap())
+    EchoQue::new(
+        QUE_EMAIL_QUEUE.get().unwrap(),
+        QUE_EMAIL_CHANNEL.get().unwrap(),
+    )
 }
 
 async fn set_echo_que() {
@@ -252,8 +252,8 @@ pub async fn setup() {
 
     set_connection().await;
     set_que().await;
-    set_email_channel().await;
     set_email_que().await;
+    set_email_channel().await;
     set_echo_que().await;
 
     set_account_service().await;

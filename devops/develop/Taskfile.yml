@@ -1,0 +1,14 @@
+version: '3'
+
+#taskfile is used for starting servers and queues
+
+vars:
+  GO_DIR: backend/go
+
+tasks:
+  queues:
+    cmds:
+      - cd ../../{{.GO_DIR}}/email && go run main.go
+ #     - cd {{.GO_DIR}}/email && go run main.go
+    silent: false
+

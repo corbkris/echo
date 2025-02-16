@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/rabbitmq/amqp091-go"
 )
 
 type Config struct {
@@ -25,4 +27,8 @@ func NewQueConfig() *Config {
 
 func (c *Config) connectionString() string {
 	return fmt.Sprintf("amqp:://%s:%s@%s:%d", c.user, c.password, c.host, c.port)
+}
+
+func Connect(config *Config) (connection *amqp091.Connection, err error) {
+	return amqp091.Dial(config.connectionString())
 }

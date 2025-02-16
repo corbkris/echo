@@ -5,24 +5,33 @@ use echo_rabbit::{
 use serde_json;
 pub type EmailSigup = QueEmailSignup;
 
-const EXCHANGE: &str = "email_exchange";
-const ROUTING_KEY: &str = "email_routing_key";
 pub const EMAIL_QUE_NAME: &str = "email_que";
+const EMAIL_EXCHANGE: &str = "my_exchange";
+const EMAIL_ROUTING_KEY: &str = "email_key";
 
 pub struct EmailQue<'a> {
     que: &'a Que<'a>,
-    email_channel: &'a RabbitChannel,
 }
 
 impl<'a> EmailQue<'a> {
-    pub fn new(que: &'a Que<'a>, email_channel: &'a RabbitChannel) -> Self {
-        Self { que, email_channel }
+    pub fn new(que: &'a Que<'a>) -> Self {
+        Self { que }
     }
 
-    pub async fn publish_email(&self, email: &EmailSigup) -> Result<(), RabbitError> {
+    pub async fn create_email_channel(&self) -> Result<RabbitChannel, RabbitError> {
+        self.que
+            .create_channel(EMAIL_QUE_NAME, EMAIL_EXCHANGE, EMAIL_ROUTING_KEY)
+            .await
+    }
+
+    pub async fn publish_email(
+        &self,
+        channel: &RabbitChannel,
+        email: &EmailSigup,
+    ) -> Result<(), RabbitError> {
         let payload = serde_json::to_string(email).unwrap();
         self.que
-            .publish_message(self.email_channel, EXCHANGE, ROUTING_KEY, &payload)
+            .publish_message(channel, EMAIL_EXCHANGE, EMAIL_ROUTING_KEY, &payload)
             .await
     }
 }

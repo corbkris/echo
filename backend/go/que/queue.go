@@ -4,22 +4,18 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 )
 
-func Connect(config *Config) (connection *amqp091.Connection, err error) {
-	return amqp091.Dial(config.connectionString())
-}
-
 type BasicQue struct {
-	connection *amqp091.Connection
+	Connection *amqp091.Connection
 }
 
 func NewBasicQue(connection *amqp091.Connection) *BasicQue {
 	return &BasicQue{
-		connection: connection,
+		Connection: connection,
 	}
 }
 
 func (c *BasicQue) DeclareChannel() (*amqp091.Channel, error) {
-	return c.connection.Channel()
+	return c.Connection.Channel()
 }
 
 func (c *BasicQue) DeclareQue(que_name string, channel *amqp091.Channel) (amqp091.Queue, error) {

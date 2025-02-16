@@ -99,7 +99,7 @@ impl<'a> DB<'a> {
     /// let query = "SELECT * FROM users WHERE id = $1 AND active = $2";
     /// let mut args = vec![Argument::Int(5)];
     /// args.push(Argument::Bool(true));
-    /// let result = self.query(query.to_string(), arguments).await?;
+    /// let result = self.query(query, arguments).await?;
     pub async fn query<T>(&self, query: &str, args: Vec<Argument>) -> Result<T, PostgresError>
     where
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,

@@ -443,6 +443,7 @@ version = "0.1.0"
 dependencies = [
  "amqprs",
  "serde",
+ "serde_json",
  "tokio",
 ]
 
