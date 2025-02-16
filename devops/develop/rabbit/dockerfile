@@ -1,16 +1,9 @@
 FROM rabbitmq:3-alpine
 
-# Define environment variables
-ENV RABBITMQ_DEFAULT_USER=myuser
-ENV RABBITMQ_DEFAULT_PASS=mypassword
-ENV RABBITMQ_DEFAULT_VHOST=myvhost
-
 # Install plugins
 RUN rabbitmq-plugins enable rabbitmq_management
 
 
 # Expose the default AMQP port
-EXPOSE 5672
+EXPOSE 5672 15672
 
-# Expose the management plugin port
-EXPOSE 15672

@@ -5,13 +5,13 @@ import (
 )
 
 type EmailConfig struct {
-	address  string
-	password string
+	fromAddress string
+	password    string
 }
 
 func NewEmailConfig() *EmailConfig {
 	return &EmailConfig{
-		address:  os.Getenv("EMAIL_ADDRESS"),
-		password: os.Getenv("EMAIL_PASSWORD"),
+		fromAddress: os.Getenv("EMAIL_ADDRESS"),
+		password:    os.Getenv("EMAIL_PASSWORD"), // not needed for mailhog
 	}
 }

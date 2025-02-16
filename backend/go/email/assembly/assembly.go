@@ -1,28 +1,31 @@
 package assembly
 
 import (
+	"log"
+
 	"github.com/korbkrys/echo/email/subscriber"
 	"github.com/korbkrys/echo/que"
 )
 
 type Common struct {
+	EmailConfig *subscriber.EmailConfig
 	Subscribers *subscriber.EchoSubscribers
-	Email       *subscriber.EmailConfig
 }
 
 func Setup() *Common {
-	config := que.NewQueConfig()
-	connection, err := que.Connect(config)
+	emailConfig := subscriber.NewEmailConfig()
+
+	queConfig := que.NewQueConfig()
+	connection, err := que.Connect(queConfig)
 	if err != nil {
-		panic(err)
+		log.Panicf("failed to start connection: %s", err)
 	}
 	basicQue := que.NewBasicQue(connection)
 
 	subscribers := subscriber.NewEchoSubscribers(basicQue)
-	email := subscriber.NewEmailConfig()
 
 	return &Common{
-		Email:       email,
+		EmailConfig: emailConfig,
 		Subscribers: subscribers,
 	}
 }

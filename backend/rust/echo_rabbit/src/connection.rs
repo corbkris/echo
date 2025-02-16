@@ -11,7 +11,7 @@ pub struct Config {
     port: u16,
     user: String,
     password: String,
-    vhost: String,
+    //vhost: String,
 }
 
 impl Config {
@@ -21,14 +21,16 @@ impl Config {
             port: env::var("RABBIT_PORT").unwrap().parse::<u16>().unwrap(),
             user: env::var("RABBIT_USER").unwrap(),
             password: env::var("RABBIT_PASSWORD").unwrap(),
-            vhost: env::var("RABBIT_VHOST").unwrap(),
+            // vhost: env::var("RABBIT_VHOST").unwrap(),
         }
     }
     pub async fn connect(&self) -> Result<RabbitConnection, Error> {
-        Connection::open(
-            &OpenConnectionArguments::new(&self.host, self.port, &self.user, &self.password)
-                .virtual_host(&self.vhost),
-        )
+        Connection::open(&OpenConnectionArguments::new(
+            &self.host,
+            self.port,
+            &self.user,
+            &self.password,
+        ))
         .await
     }
     pub async fn close_connection(&self, connection: RabbitConnection) -> Result<(), Error> {

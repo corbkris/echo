@@ -5,8 +5,24 @@ mod tests {
     #[tokio::test]
     async fn test_set() {
         let common = Common::new().await;
-        let email = EmailSigup::new("email".to_string(), "code".to_string());
-        let result = common.que.emails.publish_email(&email).await;
+        let email = EmailSigup::new("email@gmail.com".to_string(), "1234".to_string());
+        common
+            .que
+            .email_channel
+            .tx_select()
+            .await
+            .expect("failed to start tx");
+        let result = common
+            .que
+            .emails
+            .publish_email(&common.que.email_channel, &email)
+            .await;
+        common
+            .que
+            .email_channel
+            .tx_commit()
+            .await
+            .expect("failed to commit transaction");
         assert!(result.is_ok());
     }
 }

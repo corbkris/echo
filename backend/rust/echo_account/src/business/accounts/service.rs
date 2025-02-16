@@ -1,6 +1,7 @@
 use crate::business::errors::ServiceError;
 use crate::caches::{account::Account as RedisAccount, wrapper::EchoCache};
-use crate::queues::{email::EmailSigup, wrapper::EchoQue};
+use crate::queues::email::EmailSigup;
+use crate::queues::wrapper::EchoQue;
 use crate::stores::{
     account::{StoreComparisonOperator, StoreConditionalOperator},
     wrapper::EchoDatabase,
@@ -64,7 +65,10 @@ impl<'a> Service<'a> {
         match self
             .que
             .emails
-            .publish_email(&EmailSigup::new(email, secret_code.to_string().to_string()))
+            .publish_email(
+                &self.que.email_channel,
+                &EmailSigup::new(email, secret_code.to_string().to_string()),
+            )
             .await
         {
             Ok(_) => Ok(signup_key),

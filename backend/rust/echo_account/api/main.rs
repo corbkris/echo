@@ -65,13 +65,15 @@ async fn main() {
     //rabbit
     static RABBIT_CONNECTION: LazyLock<RabbitConnection> =
         LazyLock::new(|| RT.block_on(async { RabbitConfig::new().connect().await.unwrap() }));
+
     static RABBIT_QUE: LazyLock<Que> = LazyLock::new(|| Que::new(&RABBIT_CONNECTION));
-    static EMAIL_CHANNEL: LazyLock<RabbitChannel> = LazyLock::new(|| {
-        RT.block_on(async { RABBIT_QUE.create_channel("email_channel").await.unwrap() })
-    });
-    static EMAIL_QUE: LazyLock<EmailQue> =
-        LazyLock::new(|| EmailQue::new(&RABBIT_QUE, &EMAIL_CHANNEL));
-    static QUE: LazyLock<EchoQue> = LazyLock::new(|| EchoQue::new(&EMAIL_QUE));
+
+    static EMAIL_QUE: LazyLock<EmailQue> = LazyLock::new(|| EmailQue::new(&RABBIT_QUE));
+
+    static EMAIL_CHANNEL: LazyLock<RabbitChannel> =
+        LazyLock::new(|| RT.block_on(async { EMAIL_QUE.create_email_channel().await.unwrap() }));
+
+    static QUE: LazyLock<EchoQue> = LazyLock::new(|| EchoQue::new(&EMAIL_QUE, &EMAIL_CHANNEL));
 
     //services
     static ACCOUNT_SERVICE: LazyLock<AccountService> =

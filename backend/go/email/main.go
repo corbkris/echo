@@ -1,4 +1,4 @@
-package email
+package main
 
 import (
 	"log"
@@ -7,9 +7,12 @@ import (
 )
 
 func main() {
-	log.Println("hello")
+	log.Println("starting queues")
+
 	common := assembly.Setup()
 	emailSubscriber := common.Subscribers.Email
 
-	emailSubscriber.Listen(common.Email)
+	emailSubscriber.ListenV2(common.EmailConfig)
+
+	log.Println("queues successfully started")
 }
