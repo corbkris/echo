@@ -11,7 +11,7 @@ up_watch_dev:
 	@cd $(DEVOPS_DIR) && podman compose up
 
 up_server_dev:
-	@cd $(DEVOPS_DIR) && task queues
+	@cd $(DEVOPS_DIR) && go-task queues
 
 down_dev:
 	@cd $(DEVOPS_DIR) && podman compose down

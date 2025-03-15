@@ -5,7 +5,7 @@ mod tests {
     #[tokio::test]
     async fn test_set() {
         let common = Common::new().await;
-        let email = EmailSigup::new("email@gmail.com".to_string(), "1234".to_string());
+        let email = EmailSigup::new("email@gmail.com".to_string(), "12345".to_string());
         common
             .que
             .email_channel

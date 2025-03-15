@@ -2,17 +2,34 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/korbkrys/echo/email/assembly"
+	"github.com/sirupsen/logrus"
 )
 
+var logger = logrus.New()
+
+func init() {
+	logger.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp: true,
+	})
+
+	logFile, err := os.OpenFile("../../../devops/develop/loki/myapp.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		log.Fatal("Error opening log file: ", err)
+	}
+
+	logger.SetOutput(logFile)
+}
+
 func main() {
-	log.Println("starting queues")
+	logger.Info("starting queues")
 
 	common := assembly.Setup()
 	emailSubscriber := common.Subscribers.Email
 
-	emailSubscriber.ListenV2(common.EmailConfig)
+	emailSubscriber.ListenV2(logger, common.EmailConfig)
 
-	log.Println("queues successfully started")
+	logger.Info("queues successfully started")
 }

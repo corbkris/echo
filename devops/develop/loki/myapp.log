@@ -1,0 +1,18 @@
+time="2025-03-15T15:37:36-05:00" level=info msg="starting queues"
+time="2025-03-15T15:37:36-05:00" level=info msg="everything started"
+time="2025-03-15T15:37:36-05:00" level=info msg=running...
+time="2025-03-15T15:46:18-05:00" level=info msg="starting queues"
+time="2025-03-15T15:46:18-05:00" level=info msg="everything started"
+time="2025-03-15T15:46:18-05:00" level=info msg=running...
+time="2025-03-15T15:55:14-05:00" level=info msg="starting queues"
+time="2025-03-15T15:55:14-05:00" level=info msg="everything started"
+time="2025-03-15T15:55:14-05:00" level=info msg=running...
+time="2025-03-15T16:26:49-05:00" level=info msg="starting queues"
+time="2025-03-15T16:26:49-05:00" level=info msg="everything started"
+time="2025-03-15T16:26:49-05:00" level=info msg=running...
+time="2025-03-15T16:31:18-05:00" level=info msg="new message"
+time="2025-03-15T16:31:18-05:00" level=info msg=1234
+time="2025-03-15T16:31:18-05:00" level=info msg="email successfully sent"
+time="2025-03-15T16:41:11-05:00" level=info msg="new message"
+time="2025-03-15T16:41:11-05:00" level=info msg=12345
+time="2025-03-15T16:41:11-05:00" level=info msg="email successfully sent"
