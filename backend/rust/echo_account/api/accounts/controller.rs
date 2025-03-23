@@ -3,6 +3,7 @@ use crate::middleware::error::ApiError;
 use echo_account::business::accounts::service::Service as account_service;
 use hyper::{Body, Request, Response};
 use routerify::prelude::*;
+use tracing::{error, instrument};
 
 pub struct AccountState<'a> {
     pub account_service: &'a account_service<'a>,
@@ -14,6 +15,7 @@ impl<'a> AccountState<'a> {
     }
 }
 
+#[instrument]
 pub async fn signup(req: Request<Body>) -> Result<Response<Body>, ApiError> {
     let (parts, body) = req.into_parts();
 
@@ -27,7 +29,13 @@ pub async fn signup(req: Request<Body>) -> Result<Response<Body>, ApiError> {
         .await
     {
         Ok(secret_key) => secret_key,
-        Err(err) => return Err(ApiError::Generic(format!("Failed to signup user, {}", err))),
+        Err(err) => {
+            error!("{}", err);
+            return Err(ApiError::Internal(format!(
+                "Failed to signup user, {}",
+                err
+            )));
+        }
     };
 
     let second_signup = state
@@ -43,7 +51,7 @@ pub async fn signup(req: Request<Body>) -> Result<Response<Body>, ApiError> {
             println!("Second signup successful, secret key: {}", secret_key);
             // Do something with the second signup result
         }
-        Err(_) => return Err(ApiError::Generic("Failed to signup user".into())),
+        Err(_) => return Err(ApiError::Internal("Failed to signup user".into())),
     }
 
     Ok(Response::new(

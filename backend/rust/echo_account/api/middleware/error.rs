@@ -5,7 +5,7 @@ use std::fmt;
 pub enum ApiError {
     #[allow(dead_code)]
     Unauthorized,
-    Generic(String),
+    Internal(String),
     BadRequest(String),
     NotFound(String),
 }
@@ -16,7 +16,7 @@ impl fmt::Display for ApiError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             ApiError::Unauthorized => write!(f, "Unauthorized"),
-            ApiError::Generic(s) => write!(f, "Generic: {}", s),
+            ApiError::Internal(s) => write!(f, "Internal: {}", s),
             ApiError::BadRequest(s) => write!(f, "Bad Request: {}", s),
             ApiError::NotFound(s) => write!(f, "Not Found: {}", s),
         }
@@ -31,7 +31,7 @@ pub async fn error_handler(err: routerify::RouteError) -> Response<Body> {
             .status(StatusCode::UNAUTHORIZED)
             .body(Body::empty())
             .unwrap(),
-        ApiError::Generic(s) => Response::builder()
+        ApiError::Internal(s) => Response::builder()
             .status(StatusCode::INTERNAL_SERVER_ERROR)
             .body(Body::from(s.to_string()))
             .unwrap(),

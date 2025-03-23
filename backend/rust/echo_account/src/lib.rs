@@ -1,6 +1,7 @@
 pub mod assembly;
 pub mod business;
 pub mod caches;
+pub mod logger;
 pub mod queues;
 pub mod stores;
 

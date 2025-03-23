@@ -13,11 +13,11 @@ pub struct SignupRequest {
 pub async fn marshal_signup(req: Body) -> Result<SignupRequest, ApiError> {
     let whole_body = match hyper::body::to_bytes(req).await {
         Ok(whole_body) => whole_body,
-        Err(_) => return Err(ApiError::Generic("Failed to read body".into())),
+        Err(_) => return Err(ApiError::Internal("Failed to read body".into())),
     };
 
     match from_slice::<SignupRequest>(&whole_body) {
         Ok(signup_data) => Ok(signup_data),
-        Err(_) => Err(ApiError::Generic("Failed to parse json".into())),
+        Err(_) => Err(ApiError::Internal("Failed to parse json".into())),
     }
 }
