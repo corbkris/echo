@@ -15,4 +15,12 @@ scrape_configs:
           - localhost
         labels:
           job: "myapp"
-          __path__: /var/log/myapp.log
+          __path__: /var/log/myapp*.log
+
+  - job_name: "rustaccount-logs"
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: "rustaccount"
+          __path__: /var/log/rustaccount*.log.*

@@ -1,5 +1,6 @@
 auth_enabled: false
 
+
 server:
   http_listen_port: 3100  # Port for Loki HTTP API (can be customized)
 
