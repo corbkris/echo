@@ -5,6 +5,7 @@ use accounts::controller::AccountState;
 use echo_account::{
     business::{accounts::service::Service as AccountService, wrapper::Wrapper},
     caches::{account::AccountCache, wrapper::EchoCache},
+    logger::basic::register_subscriber,
     queues::{email::EmailQue, wrapper::EchoQue},
     stores::{
         account::AccountStore, account_info::AccountInfoStore,
@@ -29,9 +30,12 @@ use middleware::error::{error_handler, handler_404};
 use routerify::{Router, RouterService};
 use std::{net::SocketAddr, sync::LazyLock};
 use tokio::runtime::Runtime;
+use tracing::info;
 
 #[tokio::main]
 async fn main() {
+    register_subscriber("rustaccount.log");
+    info!("starting account server");
     static RT: LazyLock<Runtime> = LazyLock::new(|| Runtime::new().unwrap());
 
     static POSTGRES_POOL: LazyLock<PostgresPool> =

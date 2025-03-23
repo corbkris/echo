@@ -1,0 +1,31 @@
+auth_enabled: false
+
+
+server:
+  http_listen_port: 3100  # Port for Loki HTTP API (can be customized)
+
+ingester:
+  chunk_idle_period: 1h     # Time to wait before flushing chunks if there is no new data
+  chunk_retain_period: 1h    # How long to retain the chunk before it's deleted
+  max_chunk_size: 1048576   # Maximum size of a chunk (in bytes)
+
+index:
+  prefix: loki_index_  # Prefix for index names
+  period: 24h          # The period for index partitioning
+
+frontend:
+  grpc_backend_address: "localhost:9095"  # Default Loki frontend address for GRPC
+  http_listen_port: 9095  # Frontend HTTP port
+
+storage_config:
+  boltdb_shipper:
+    directory: /loki/index  # Directory for storing index files (Loki's database)
+    retention_policy: 7d    # Retain indexes for 7 days
+
+  filesystem:
+    directory: /loki/chunks  # Directory for storing log chunks
+
+limits_config:
+  max_streams_per_user: 10000  # Maximum number of streams per user
+
+chunk_target_size: 1048576  # Size of chunks (in bytes) to send to storage

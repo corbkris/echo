@@ -3,9 +3,9 @@ mod tests {
 
     use crate::{assembly::setup::Common, queues::email::EmailSigup};
     #[tokio::test]
-    async fn test_set() {
+    async fn test_send_que_message() {
         let common = Common::new().await;
-        let email = EmailSigup::new("email@gmail.com".to_string(), "1234".to_string());
+        let email = EmailSigup::new("email@gmail.com".to_string(), "12345".to_string());
         common
             .que
             .email_channel
