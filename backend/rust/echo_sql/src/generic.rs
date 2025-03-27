@@ -6,8 +6,11 @@ use sqlx::{
     postgres::{PgQueryResult, PgRow},
     query, query_as, Error, FromRow, Postgres,
 };
+use uuid::Uuid;
+
 pub type PostgresError = Error;
 pub type PostgresQueryResult = PgQueryResult;
+pub type UUID = Uuid;
 
 #[derive(Debug)]
 pub enum Argument {

@@ -1,50 +1,28 @@
 use echo_sql::{
     basic::{ComparisonOperator, ConditonalOperator},
-    generic::{Argument, PostgresError, PostgresQueryResult, DB},
+    generic::{Argument, PostgresError, DB},
+    impl_deref_store,
     models::account::Account as ModelAccount,
+    table::BaseTable,
 };
 
 pub type StoreConditionalOperator = ConditonalOperator;
 pub type StoreComparisonOperator = ComparisonOperator;
 pub type Account = ModelAccount;
 
+impl_deref_store!(AccountStore, Account);
 pub struct AccountStore<'a> {
     db: &'a DB<'a>,
+    pub base_table: BaseTable<'a, Account>,
+}
+
+pub fn new_account_table<'a>(db: &'a DB) -> BaseTable<'a, Account> {
+    BaseTable::<Account>::new(db)
 }
 
 impl<'a> AccountStore<'a> {
-    pub fn new(db: &'a DB) -> Self {
-        Self { db }
-    }
-
-    pub async fn insert(&self, account: &mut Account) -> Option<PostgresError> {
-        self.db.insert(account).await
-    }
-
-    pub async fn update(&self, account: &mut Account) -> Option<PostgresError> {
-        self.db.update(account).await
-    }
-
-    pub async fn delete(&self, account: &Account) -> Result<PostgresQueryResult, PostgresError> {
-        self.db.delete(account).await
-    }
-
-    pub async fn basic_search(
-        &self,
-        account: &Account,
-        comparison: StoreComparisonOperator,
-        conditional: StoreConditionalOperator,
-    ) -> Result<Vec<Account>, PostgresError> {
-        self.db.search_all(account, comparison, conditional).await
-    }
-
-    pub async fn basic_search_single(
-        &self,
-        account: &Account,
-        comparison: StoreComparisonOperator,
-        conditional: StoreConditionalOperator,
-    ) -> Result<Account, PostgresError> {
-        self.db.search(account, comparison, conditional).await
+    pub fn new(db: &'a DB, base_table: BaseTable<'a, Account>) -> Self {
+        Self { db, base_table }
     }
 
     pub async fn get_by_id(&self) -> Result<Account, PostgresError> {
