@@ -1,18 +1,14 @@
-use crate::basic::ModelBuilder;
+use crate::{basic::ModelBuilder, generic::UUID};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use sqlx::types::Uuid;
 
 #[derive(sqlx::FromRow, Serialize, Deserialize, Debug)]
 pub struct Account {
-    #[sqlx(try_from = "Uuid")]
     #[serde(rename = "id")]
-    pub id: String,
+    pub id: Option<UUID>,
     #[serde(rename = "username")]
     pub username: String,
-    #[serde(rename = "password")]
-    pub password: String,
     #[serde(rename = "created_at")]
     pub created_at: Option<DateTime<Utc>>,
     #[serde(rename = "updated_at")]
@@ -21,16 +17,14 @@ pub struct Account {
 
 impl Account {
     pub fn new(
-        id: String,
+        id: Option<UUID>,
         username: String,
-        password: String,
         created_at: Option<DateTime<Utc>>,
         updated_at: Option<DateTime<Utc>>,
     ) -> Self {
         Account {
             id,
             username,
-            password,
             created_at,
             updated_at,
         }
@@ -43,7 +37,10 @@ impl ModelBuilder for Account {
     }
 
     fn id(&self) -> String {
-        format!("'{}'", self.id)
+        match self.id {
+            Some(uuid) => format!("'{}'", uuid),
+            None => "NULL".to_string(),
+        }
     }
 
     fn to_json(&self) -> serde_json::Value {

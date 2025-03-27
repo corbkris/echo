@@ -8,8 +8,10 @@ use echo_account::{
     logger::basic::register_subscriber,
     queues::{email::EmailQue, wrapper::EchoQue},
     stores::{
-        account::AccountStore, account_info::AccountInfoStore,
-        basic_account_info::BasicAccountInfoStore, managed_account_info::ManagedAccountInfoStore,
+        account::{new_account_table, AccountStore},
+        account_info::AccountInfoStore,
+        basic_account_info::BasicAccountInfoStore,
+        managed_account_info::ManagedAccountInfoStore,
         wrapper::EchoDatabase,
     },
 };
@@ -42,7 +44,7 @@ async fn main() {
         LazyLock::new(|| RT.block_on(async { DBConfig::new().connect().await.unwrap() }));
     static POSTGRES_DB: LazyLock<DB> = LazyLock::new(|| DB::new(&POSTGRES_POOL));
     static ACCOUNT_STORE: LazyLock<AccountStore> =
-        LazyLock::new(|| AccountStore::new(&POSTGRES_DB));
+        LazyLock::new(|| AccountStore::new(&POSTGRES_DB, new_account_table(&POSTGRES_DB)));
     static ACCOUNT_INFO_STORE: LazyLock<AccountInfoStore> =
         LazyLock::new(|| AccountInfoStore::new(&POSTGRES_DB));
     static BASIC_ACCOUNT_INFO_STORE: LazyLock<BasicAccountInfoStore> =

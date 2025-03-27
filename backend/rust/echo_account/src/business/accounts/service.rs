@@ -13,7 +13,9 @@ use crate::business::{
 };
 
 use bcrypt::{hash, DEFAULT_COST};
+use echo_sql::generic::UUID;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use tracing::info;
 use uuid::Uuid;
 
 pub struct Service<'a> {
@@ -92,7 +94,6 @@ impl<'a> Service<'a> {
 
         let mut marshaled_account = marshal(Account {
             email: account.email,
-            password: account.password,
             ..Default::default()
         });
 
@@ -111,13 +112,13 @@ impl<'a> Service<'a> {
             Ok(hashed) => hashed,
             Err(err) => return Err(ServiceError::Generic(err.to_string())),
         };
+        info!("{}", password);
         match self
             .db
             .accounts
-            .basic_search_single(
+            .search(
                 &marshal(Account {
                     email,
-                    password,
                     ..Default::default()
                 }),
                 StoreComparisonOperator::Equal,
@@ -134,7 +135,7 @@ impl<'a> Service<'a> {
         match self
             .db
             .accounts
-            .basic_search_single(
+            .search(
                 &marshal(Account {
                     email: email.to_string(),
                     ..Default::default()
@@ -149,13 +150,13 @@ impl<'a> Service<'a> {
         }
     }
 
-    pub async fn find_by_id(&self, id: &str) -> Result<Account, ServiceError> {
+    pub async fn find_by_id(&self, id: UUID) -> Result<Account, ServiceError> {
         match self
             .db
             .accounts
-            .basic_search_single(
+            .search(
                 &marshal(Account {
-                    id: id.to_string(),
+                    id,
                     ..Default::default()
                 }),
                 StoreComparisonOperator::Equal,

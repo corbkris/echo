@@ -4,11 +4,14 @@ use echo_sql::{
 };
 use tokio::sync::OnceCell;
 
-use crate::caches::{account::AccountCache, wrapper::EchoCache};
 use crate::stores::{
     account::AccountStore, account_info::AccountInfoStore,
     basic_account_info::BasicAccountInfoStore, managed_account_info::ManagedAccountInfoStore,
     wrapper::EchoDatabase,
+};
+use crate::{
+    caches::{account::AccountCache, wrapper::EchoCache},
+    stores::account::new_account_table,
 };
 use echo_redis::{
     connection::{Config as RedisConfig, RedisClient},
@@ -86,7 +89,10 @@ async fn set_postgres() {
 }
 
 async fn get_account_store<'a>() -> AccountStore<'a> {
-    AccountStore::new(ECHO_POSTGRES.get().unwrap())
+    AccountStore::new(
+        ECHO_POSTGRES.get().unwrap(),
+        new_account_table(ECHO_POSTGRES.get().unwrap()),
+    )
 }
 
 async fn set_account_store() {
