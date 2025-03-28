@@ -2,7 +2,7 @@
 mod tests {
 
     use crate::basic::{insert, search, update, ComparisonOperator, ConditonalOperator};
-    use crate::models::account::Account;
+    use crate::tables::account::Account;
     use chrono::Utc;
     use uuid::Uuid;
 

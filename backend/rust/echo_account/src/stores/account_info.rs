@@ -1,54 +1,26 @@
 use echo_sql::{
     basic::{ComparisonOperator, ConditonalOperator},
-    generic::{PostgresError, PostgresQueryResult, DB},
-    models::account_info::AccountInfo as ModelAccountInfo,
+    generic::DB,
+    impl_deref_store,
+    table::BaseTable,
+    tables::account_info::AccountInfo as ModelAccountInfo,
 };
 
 pub type StoreConditionalOperator = ConditonalOperator;
 pub type StoreComparisonOperator = ComparisonOperator;
 pub type AccountInfo = ModelAccountInfo;
 
+impl_deref_store!(AccountInfoStore, AccountInfo);
 pub struct AccountInfoStore<'a> {
-    db: &'a DB<'a>,
+    pub base_table: BaseTable<'a, AccountInfo>,
+}
+
+pub fn new_account_info_table<'a>(db: &'a DB) -> BaseTable<'a, AccountInfo> {
+    BaseTable::<AccountInfo>::new(db)
 }
 
 impl<'a> AccountInfoStore<'a> {
-    pub fn new(db: &'a DB) -> Self {
-        Self { db }
-    }
-
-    pub async fn insert(&self, account_info: &mut AccountInfo) -> Option<PostgresError> {
-        self.db.insert(account_info).await
-    }
-
-    pub async fn update(&self, account_info: &mut AccountInfo) -> Option<PostgresError> {
-        self.db.update(account_info).await
-    }
-
-    pub async fn delete(
-        &self,
-        account_info: &AccountInfo,
-    ) -> Result<PostgresQueryResult, PostgresError> {
-        self.db.delete(account_info).await
-    }
-
-    pub async fn basic_search(
-        &self,
-        account_info: &AccountInfo,
-        comparison: StoreComparisonOperator,
-        conditional: StoreConditionalOperator,
-    ) -> Result<Vec<AccountInfo>, PostgresError> {
-        self.db
-            .search_all(account_info, comparison, conditional)
-            .await
-    }
-
-    pub async fn basic_search_single(
-        &self,
-        account_info: &AccountInfo,
-        comparison: StoreComparisonOperator,
-        conditional: StoreConditionalOperator,
-    ) -> Result<AccountInfo, PostgresError> {
-        self.db.search(account_info, comparison, conditional).await
+    pub fn new(base_table: BaseTable<'a, AccountInfo>) -> Self {
+        Self { base_table }
     }
 }

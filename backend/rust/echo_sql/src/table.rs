@@ -1,6 +1,6 @@
 use crate::{
     basic::{ComparisonOperator, ConditonalOperator, ModelBuilder},
-    generic::{PostgresError, PostgresQueryResult, DB},
+    generic::{Argument, PostgresError, PostgresQueryResult, DB},
 };
 
 use sqlx::{postgres::PgRow, FromRow};
@@ -46,6 +46,18 @@ impl<'a, T: ModelBuilder + Send + Sync + Unpin + for<'r> FromRow<'r, PgRow>> Bas
         conditional: ConditonalOperator,
     ) -> Result<Vec<T>, PostgresError> {
         self.db.search_all(item, comparison, conditional).await
+    }
+
+    pub async fn query(&self, query: &str, args: Vec<Argument>) -> Result<T, PostgresError> {
+        self.db.query(query, args).await
+    }
+
+    pub async fn query_all(
+        &self,
+        query: String,
+        args: Vec<Argument>,
+    ) -> Result<Vec<T>, PostgresError> {
+        self.db.query_all(query, args).await
     }
 }
 

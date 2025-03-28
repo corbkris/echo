@@ -1,6 +1,4 @@
-use echo_sql::models::account::Account;
-
-use crate::assembly::setup::Common;
+use crate::{assembly::setup::Common, stores::account::Account};
 
 impl<'a> Common<'a> {
     pub async fn create_account(&self) -> Account {

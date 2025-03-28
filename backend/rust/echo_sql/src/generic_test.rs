@@ -2,7 +2,7 @@
 mod tests {
     use crate::connection::Config;
     use crate::generic::DB;
-    use crate::models::account::Account;
+    use crate::tables::account::Account;
 
     #[tokio::test]
     async fn test_db() {

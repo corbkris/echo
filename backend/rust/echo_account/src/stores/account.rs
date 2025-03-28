@@ -2,8 +2,8 @@ use echo_sql::{
     basic::{ComparisonOperator, ConditonalOperator},
     generic::{Argument, PostgresError, DB},
     impl_deref_store,
-    models::account::Account as ModelAccount,
     table::BaseTable,
+    tables::account::Account as ModelAccount,
 };
 
 pub type StoreConditionalOperator = ConditonalOperator;
@@ -12,7 +12,6 @@ pub type Account = ModelAccount;
 
 impl_deref_store!(AccountStore, Account);
 pub struct AccountStore<'a> {
-    db: &'a DB<'a>,
     pub base_table: BaseTable<'a, Account>,
 }
 
@@ -21,8 +20,8 @@ pub fn new_account_table<'a>(db: &'a DB) -> BaseTable<'a, Account> {
 }
 
 impl<'a> AccountStore<'a> {
-    pub fn new(db: &'a DB, base_table: BaseTable<'a, Account>) -> Self {
-        Self { db, base_table }
+    pub fn new(base_table: BaseTable<'a, Account>) -> Self {
+        Self { base_table }
     }
 
     pub async fn get_by_id(&self) -> Result<Account, PostgresError> {
@@ -31,6 +30,6 @@ impl<'a> AccountStore<'a> {
         let mut args = vec![Argument::Int(5), Argument::Int(5)];
         args.push(Argument::Bool(true));
 
-        self.db.query(query, args).await
+        self.query(query, args).await
     }
 }
