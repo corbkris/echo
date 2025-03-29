@@ -1,10 +1,5 @@
-use echo_sql::{
-    connection::{Config as PostgresConfig, PostgresPool},
-    generic::DB,
-};
-use tokio::sync::OnceCell;
-use tracing::info;
-
+use crate::business::{accounts::service::Service as AccountService, wrapper::Wrapper};
+use crate::queues::{email::EmailQue, wrapper::EchoQue};
 use crate::{
     caches::{account::AccountCache, wrapper::EchoCache},
     stores::account::new_account_table,
@@ -19,19 +14,20 @@ use crate::{
         wrapper::EchoDatabase,
     },
 };
-use echo_redis::{
-    connection::{Config as RedisConfig, RedisClient},
-    generic::Cache,
-};
-
 use echo_rabbit::{
     connection::{Config as RabbitConfig, RabbitConnection},
     generic::{Que, RabbitChannel},
 };
-
-use crate::queues::{email::EmailQue, wrapper::EchoQue};
-
-use crate::business::{accounts::service::Service as AccountService, wrapper::Wrapper};
+use echo_redis::{
+    connection::{Config as RedisConfig, RedisClient},
+    generic::Cache,
+};
+use echo_sql::{
+    connection::{Config as PostgresConfig, PostgresPool},
+    generic::DB,
+};
+use tokio::sync::OnceCell;
+use tracing::info;
 
 pub static ECHO_DB: OnceCell<EchoDatabase> = OnceCell::const_new();
 pub static ECHO_POOL: OnceCell<PostgresPool> = OnceCell::const_new();

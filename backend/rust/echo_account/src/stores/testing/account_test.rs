@@ -15,6 +15,9 @@ mod tests {
         let result = common.db.accounts.insert(&mut account).await;
         assert!(result.is_none());
         assert_ne!(account.id, None);
+        let result = common.db.accounts.update(&mut account).await;
+        assert!(result.is_none());
+        assert_ne!(account.id, None);
     }
 
     #[tokio::test]

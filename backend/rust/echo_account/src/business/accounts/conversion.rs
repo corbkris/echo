@@ -1,4 +1,4 @@
-use echo_sql::generic::UUID;
+use uuid::Uuid;
 
 use crate::business::account::Account as BusinessAccount;
 use crate::stores::account::Account;
@@ -16,7 +16,7 @@ pub fn unmarshal(model_account: Account) -> BusinessAccount {
     BusinessAccount {
         id: match model_account.id {
             Some(uuid) => uuid,
-            None => UUID::nil(),
+            None => Uuid::nil(),
         },
         email: "".to_string(),
         days_active: None,

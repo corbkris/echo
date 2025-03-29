@@ -1,14 +1,9 @@
 use echo_sql::{
-    basic::{ComparisonOperator, ConditonalOperator},
-    generic::DB,
-    impl_deref_store,
-    table::BaseTable,
-    tables::account_info::AccountInfo as ModelAccountInfo,
+    generic::DB, impl_deref_store, table::BaseTable,
+    tables::account_info::AccountInfo as TableAccountInfo,
 };
 
-pub type StoreConditionalOperator = ConditonalOperator;
-pub type StoreComparisonOperator = ComparisonOperator;
-pub type AccountInfo = ModelAccountInfo;
+pub type AccountInfo = TableAccountInfo;
 
 impl_deref_store!(AccountInfoStore, AccountInfo);
 pub struct AccountInfoStore<'a> {

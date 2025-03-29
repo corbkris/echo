@@ -2,20 +2,15 @@ use crate::business::errors::ServiceError;
 use crate::caches::{account::Account as RedisAccount, wrapper::EchoCache};
 use crate::queues::email::EmailSigup;
 use crate::queues::wrapper::EchoQue;
-use crate::stores::{
-    account::{StoreComparisonOperator, StoreConditionalOperator},
-    wrapper::EchoDatabase,
-};
-
-use crate::business::{
-    account::Account,
-    accounts::conversion::{marshal, unmarshal},
-};
+use crate::stores::account::Account;
+use crate::stores::account_info::AccountInfo;
+use crate::stores::basic_account_info::BasicAccountInfo;
+use crate::stores::wrapper::EchoDatabase;
 
 use bcrypt::{hash, DEFAULT_COST};
-use echo_sql::generic::UUID;
+use echo_sql::generic::PostgresError;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
-use tracing::info;
+use tracing::error;
 use uuid::Uuid;
 
 pub struct Service<'a> {
@@ -29,16 +24,76 @@ impl<'a> Service<'a> {
         Service { db, cache, que }
     }
 
+    pub async fn basic_signup(&self, username: &str, mut password: String) {
+        match self
+            .db
+            .accounts
+            .find_by_username(username.to_string())
+            .await
+        {
+            Ok(_) => {
+                error!("username taken");
+                return;
+            }
+            Err(err) => {
+                if !matches!(err, PostgresError::RowNotFound) {
+                    error!("failed to search for account");
+                    return;
+                }
+            }
+        };
+
+        password = match hash(password, DEFAULT_COST) {
+            Ok(hashed) => hashed,
+            Err(err) => {
+                error!("failed to hash password,{}", err);
+                return;
+            }
+        };
+
+        let mut account = Account {
+            username: username.to_string(),
+            ..Default::default()
+        };
+
+        if let Some(err) = self.db.accounts.insert(&mut account).await {
+            error!("failed to insert account, {}", err);
+            return;
+        };
+
+        let mut account_info = AccountInfo {
+            account_id: account.id.unwrap(),
+            password,
+            ..Default::default()
+        };
+
+        if let Some(err) = self.db.account_info.insert(&mut account_info).await {
+            error!("failed to insert account_info, {}", err);
+            return;
+        };
+
+        let mut basic_account_info = BasicAccountInfo {
+            id: account_info.id.unwrap(),
+            recovery_key: Uuid::new_v4(),
+            ..Default::default()
+        };
+
+        if let Some(err) = self
+            .db
+            .basic_account_info
+            .insert(&mut basic_account_info)
+            .await
+        {
+            error!("failed to insert basic_account_info, {}", err);
+            return;
+        };
+    }
+
     pub async fn signup(
         &self,
         email: String,
         mut password: String,
     ) -> Result<String, ServiceError> {
-        match self.find_by_email(&email).await {
-            Ok(_) => return Err(ServiceError::Generic("email already exists".to_string())),
-            Err(_) => {}
-        };
-
         password = match hash(password, DEFAULT_COST) {
             Ok(hashed) => hashed,
             Err(err) => return Err(ServiceError::Generic(err.to_string())),
@@ -75,97 +130,6 @@ impl<'a> Service<'a> {
         {
             Ok(_) => Ok(signup_key),
             Err(err) => Err(ServiceError::Rabbit(err)),
-        }
-    }
-
-    pub async fn try_signup_code(
-        &self,
-        code: &str,
-        signup_key: &str,
-    ) -> Result<Account, ServiceError> {
-        let account = match self.cache.accounts.get_signup(signup_key).await {
-            Ok(account) => account,
-            Err(err) => return Err(ServiceError::Generic(err)),
-        };
-
-        if account.code != code {
-            return Err(ServiceError::Generic("invalid code".to_string()));
-        }
-
-        let mut marshaled_account = marshal(Account {
-            email: account.email,
-            ..Default::default()
-        });
-
-        match self.db.accounts.insert(&mut marshaled_account).await {
-            None => Ok(unmarshal(marshaled_account)),
-            Some(err) => Err(ServiceError::Postgres(err)),
-        }
-    }
-
-    pub async fn login(
-        &self,
-        email: String,
-        mut password: String,
-    ) -> Result<Account, ServiceError> {
-        password = match hash(password, DEFAULT_COST) {
-            Ok(hashed) => hashed,
-            Err(err) => return Err(ServiceError::Generic(err.to_string())),
-        };
-        info!("{}", password);
-        match self
-            .db
-            .accounts
-            .search(
-                &marshal(Account {
-                    email,
-                    ..Default::default()
-                }),
-                StoreComparisonOperator::Equal,
-                StoreConditionalOperator::AND,
-            )
-            .await
-        {
-            Ok(account) => Ok(unmarshal(account)),
-            Err(err) => Err(ServiceError::Postgres(err)),
-        }
-    }
-
-    async fn find_by_email(&self, email: &str) -> Result<Account, ServiceError> {
-        match self
-            .db
-            .accounts
-            .search(
-                &marshal(Account {
-                    email: email.to_string(),
-                    ..Default::default()
-                }),
-                StoreComparisonOperator::Equal,
-                StoreConditionalOperator::Basic,
-            )
-            .await
-        {
-            Ok(account) => return Ok(unmarshal(account)),
-            Err(err) => return Err(ServiceError::Postgres(err)),
-        }
-    }
-
-    pub async fn find_by_id(&self, id: UUID) -> Result<Account, ServiceError> {
-        match self
-            .db
-            .accounts
-            .search(
-                &marshal(Account {
-                    id,
-                    ..Default::default()
-                }),
-                StoreComparisonOperator::Equal,
-                StoreConditionalOperator::Basic,
-            )
-            .await
-        {
-            Ok(account) => return Ok(unmarshal(account)),
-            Err(err) => return Err(ServiceError::Postgres(err)),
         }
     }
 }

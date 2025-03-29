@@ -1,9 +1,9 @@
-use echo_sql::generic::UUID;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Account {
-    pub id: UUID,
+    pub id: Uuid,
     pub username: String,
     pub email: String,
     pub days_active: Option<i32>,
@@ -12,7 +12,7 @@ pub struct Account {
 
 impl Account {
     pub fn new(
-        id: UUID,
+        id: Uuid,
         username: String,
         email: String,
         days_active: Option<i32>,

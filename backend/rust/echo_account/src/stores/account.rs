@@ -3,12 +3,10 @@ use echo_sql::{
     generic::{Argument, PostgresError, DB},
     impl_deref_store,
     table::BaseTable,
-    tables::account::Account as ModelAccount,
+    tables::account::Account as TableAccount,
 };
 
-pub type StoreConditionalOperator = ConditonalOperator;
-pub type StoreComparisonOperator = ComparisonOperator;
-pub type Account = ModelAccount;
+pub type Account = TableAccount;
 
 impl_deref_store!(AccountStore, Account);
 pub struct AccountStore<'a> {
@@ -24,7 +22,19 @@ impl<'a> AccountStore<'a> {
         Self { base_table }
     }
 
-    pub async fn get_by_id(&self) -> Result<Account, PostgresError> {
+    pub async fn find_by_username(&self, username: String) -> Result<Account, PostgresError> {
+        self.search(
+            &Account {
+                username,
+                ..Default::default()
+            },
+            ComparisonOperator::Equal,
+            ConditonalOperator::Basic,
+        )
+        .await
+    }
+
+    pub async fn find_by_id(&self) -> Result<Account, PostgresError> {
         let query = "";
 
         let mut args = vec![Argument::Int(5), Argument::Int(5)];

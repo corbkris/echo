@@ -1,8 +1,7 @@
-use crate::basic::ModelBuilder;
+use crate::{basic::ModelBuilder, generic::UUID};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use sqlx::types::Uuid;
 
 #[derive(sqlx::Type, Serialize, Deserialize, Debug)]
 #[sqlx(type_name = "account_type")] // Match the PostgreSQL enum type name
@@ -12,14 +11,20 @@ pub enum AccountType {
     Managed,
 }
 
-#[derive(sqlx::FromRow, Serialize, Deserialize, Debug)]
+impl Default for AccountType {
+    fn default() -> Self {
+        AccountType::Basic // Specify the default variant
+    }
+}
+
+#[derive(sqlx::FromRow, Serialize, Deserialize, Debug, Default)]
 pub struct AccountInfo {
-    #[sqlx(try_from = "Uuid")]
     #[serde(rename = "id")]
-    pub id: String,
-    #[sqlx(try_from = "Uuid")]
+    pub id: Option<UUID>,
     #[serde(rename = "account_id")]
-    pub account_id: String,
+    pub account_id: UUID,
+    #[serde(rename = "password")]
+    pub password: String,
     #[serde(rename = "account_type")]
     pub account_type: AccountType,
     #[serde(rename = "days_active")]
@@ -32,8 +37,9 @@ pub struct AccountInfo {
 
 impl AccountInfo {
     pub fn new(
-        id: String,
-        account_id: String,
+        id: Option<UUID>,
+        account_id: UUID,
+        password: String,
         account_type: AccountType,
         days_active: Option<i32>,
         created_at: Option<DateTime<Utc>>,
@@ -42,6 +48,7 @@ impl AccountInfo {
         AccountInfo {
             id,
             account_id,
+            password,
             account_type,
             days_active,
             created_at,
@@ -56,7 +63,10 @@ impl ModelBuilder for AccountInfo {
     }
 
     fn id(&self) -> String {
-        format!("'{}'", self.id)
+        match self.id {
+            Some(uuid) => format!("'{}'", uuid),
+            None => "NULL".to_string(),
+        }
     }
 
     fn to_json(&self) -> serde_json::Value {

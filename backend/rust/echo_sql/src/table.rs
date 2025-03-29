@@ -30,6 +30,7 @@ impl<'a, T: ModelBuilder + Send + Sync + Unpin + for<'r> FromRow<'r, PgRow>> Bas
         self.db.delete(item).await
     }
 
+    //use for basic queries that return single objects
     pub async fn search(
         &self,
         item: &T,
@@ -39,6 +40,7 @@ impl<'a, T: ModelBuilder + Send + Sync + Unpin + for<'r> FromRow<'r, PgRow>> Bas
         self.db.search(item, comparison, conditional).await
     }
 
+    //use for basic queries that return multiple results
     pub async fn search_all(
         &self,
         item: &T,
@@ -48,10 +50,12 @@ impl<'a, T: ModelBuilder + Send + Sync + Unpin + for<'r> FromRow<'r, PgRow>> Bas
         self.db.search_all(item, comparison, conditional).await
     }
 
+    //use for complex queries that return single objects
     pub async fn query(&self, query: &str, args: Vec<Argument>) -> Result<T, PostgresError> {
         self.db.query(query, args).await
     }
 
+    //use for complex queries that return multiple results
     pub async fn query_all(
         &self,
         query: String,
