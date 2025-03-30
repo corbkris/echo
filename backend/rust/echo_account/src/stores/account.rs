@@ -22,10 +22,10 @@ impl<'a> AccountStore<'a> {
         Self { base_table }
     }
 
-    pub async fn find_by_username(&self, username: String) -> Result<Account, PostgresError> {
+    pub async fn find_by_username(&self, username: &str) -> Result<Account, PostgresError> {
         self.search(
             &Account {
-                username,
+                username: username.to_string(),
                 ..Default::default()
             },
             ComparisonOperator::Equal,

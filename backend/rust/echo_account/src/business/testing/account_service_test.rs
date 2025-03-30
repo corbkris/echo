@@ -8,14 +8,14 @@ mod tests {
         let result = common
             .services
             .account_service
-            .signup("email".to_string(), "password".to_string())
+            .basic_signup("email", "password")
             .await;
         assert!(result.is_ok());
 
         let result = common
             .services
             .account_service
-            .signup("email".to_string(), "password".to_string())
+            .basic_signup("email", "password")
             .await;
         assert!(result.is_ok());
     }

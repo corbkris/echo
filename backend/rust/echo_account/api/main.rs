@@ -1,11 +1,14 @@
 pub mod accounts;
 pub mod middleware;
 
-use accounts::controller::AccountState;
+use accounts::controller::{basic_signup, AccountState};
 use echo_account::assembly::setup::Common;
 use hyper::Server;
-use middleware::error::{error_handler, handler_404};
-use routerify::{Router, RouterService};
+use middleware::{
+    basic::logger_handler,
+    error::{error_handler, handler_404},
+};
+use routerify::{Middleware, Router, RouterService};
 use std::net::SocketAddr;
 use tracing::info;
 
@@ -20,6 +23,8 @@ async fn main() {
                 "/accounts",
                 Router::builder()
                     .data(AccountState::new(common.services.account_service))
+                    .middleware(Middleware::pre(logger_handler))
+                    .post("/sign_up/basic", basic_signup)
                     .any(handler_404)
                     .build()
                     .unwrap(),

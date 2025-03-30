@@ -2,17 +2,17 @@ use hyper::{Body, Request, Response, StatusCode};
 use std::fmt;
 
 #[derive(Debug)]
-pub enum ApiError {
+pub enum ApiError<'a> {
     #[allow(dead_code)]
     Unauthorized,
-    Internal(String),
-    BadRequest(String),
-    NotFound(String),
+    Internal(&'a str),
+    BadRequest(&'a str),
+    NotFound(&'a str),
 }
 
-impl std::error::Error for ApiError {}
+impl<'a> std::error::Error for ApiError<'a> {}
 
-impl fmt::Display for ApiError {
+impl<'a> fmt::Display for ApiError<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             ApiError::Unauthorized => write!(f, "Unauthorized"),
@@ -46,7 +46,7 @@ pub async fn error_handler(err: routerify::RouteError) -> Response<Body> {
     }
 }
 
-pub async fn handler_404(_: Request<Body>) -> Result<Response<Body>, ApiError> {
+pub async fn handler_404<'a>(_: Request<Body>) -> Result<Response<Body>, ApiError<'a>> {
     Ok(Response::builder()
         .status(StatusCode::NOT_FOUND)
         .body(Body::from("Page Not Found"))

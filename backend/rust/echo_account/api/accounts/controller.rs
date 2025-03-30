@@ -1,7 +1,11 @@
-use crate::accounts::acceptor::marshal_signup;
+use crate::accounts::{
+    acceptor::marshal_signup,
+    presenter::{SignupPresenter, SignupResponse},
+};
 use crate::middleware::error::ApiError;
-use echo_account::business::accounts::service::Service as account_service;
-use hyper::{Body, Request, Response};
+use echo_account::business::{accounts::service::Service as account_service, errors::ServiceError};
+use echo_sql::generic::PostgresError;
+use hyper::{header, Body, Request, Response, StatusCode};
 use routerify::prelude::*;
 use tracing::{error, instrument};
 
@@ -16,45 +20,54 @@ impl<'a> AccountState<'a> {
 }
 
 #[instrument]
-pub async fn signup(req: Request<Body>) -> Result<Response<Body>, ApiError> {
+pub async fn basic_signup<'a>(req: Request<Body>) -> Result<Response<Body>, ApiError<'a>> {
     let (parts, body) = req.into_parts();
 
+    let state = parts.data::<AccountState>().unwrap();
     let signup_data = marshal_signup(body).await?;
 
-    let state = parts.data::<AccountState>().unwrap();
+    let username: &str = &signup_data.signup.username;
+    let password: &str = &signup_data.signup.password;
 
-    let secret_key = match state
+    match state
         .account_service
-        .signup(signup_data.email, signup_data.password)
+        .find_account_by_username(username)
         .await
     {
-        Ok(secret_key) => secret_key,
+        Ok(_) => {
+            return Err(ApiError::BadRequest("username taken"));
+        }
+        Err(err) => {
+            if !matches!(err, ServiceError::Postgres(PostgresError::RowNotFound)) {
+                return Err(ApiError::Internal("failed to signup user"));
+            }
+        }
+    }
+
+    let recovery_key = match state.account_service.basic_signup(username, password).await {
+        Ok(recovery_key) => recovery_key,
         Err(err) => {
             error!("{}", err);
-            return Err(ApiError::Internal(format!(
-                "Failed to signup user, {}",
-                err
-            )));
+            return Err(ApiError::Internal("failed to signup user"));
         }
     };
 
-    let second_signup = state
-        .account_service
-        .signup(
-            "another_email@example.com".to_string(),
-            "another_password".to_string(),
-        ) // Change as needed
-        .await;
-
-    match second_signup {
-        Ok(secret_key) => {
-            println!("Second signup successful, secret key: {}", secret_key);
-            // Do something with the second signup result
+    let body = match serde_json::to_string(&SignupPresenter {
+        signup: SignupResponse {
+            username: username.to_string(),
+            recovery_key,
+        },
+    }) {
+        Ok(json) => json,
+        Err(err) => {
+            error!("{}", err);
+            return Err(ApiError::Internal("failed to signup user"));
         }
-        Err(_) => return Err(ApiError::Internal("Failed to signup user".into())),
-    }
+    };
 
-    Ok(Response::new(
-        format!("Signup for user: {}", secret_key).into(),
-    ))
+    Ok(Response::builder()
+        .status(StatusCode::CREATED)
+        .header(header::CONTENT_TYPE, "application/json")
+        .body(Body::from(body))
+        .unwrap())
 }
