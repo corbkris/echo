@@ -1,7 +1,7 @@
 pub mod accounts;
 pub mod middleware;
 
-use accounts::controller::{basic_signup, AccountState};
+use accounts::controller::{basic_signup, managed_signup, send_managed_signup_code, AccountState};
 use echo_account::assembly::setup::Common;
 use hyper::Server;
 use middleware::{
@@ -25,6 +25,8 @@ async fn main() {
                     .data(AccountState::new(common.services.account_service))
                     .middleware(Middleware::pre(logger_handler))
                     .post("/sign_up/basic", basic_signup)
+                    .post("/sign_up/managed", send_managed_signup_code)
+                    .post("/sign_up/managed/:code", managed_signup)
                     .any(handler_404)
                     .build()
                     .unwrap(),

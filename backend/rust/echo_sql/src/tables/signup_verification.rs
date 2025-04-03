@@ -4,48 +4,59 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 #[derive(sqlx::FromRow, Serialize, Deserialize, Debug, Default)]
-pub struct ManagedAccountInfo {
+pub struct SignupVerification {
     #[serde(rename = "id")]
-    pub id: UUID,
+    pub id: Option<UUID>,
+    #[serde(rename = "code")]
+    pub code: String,
     #[serde(rename = "email")]
     pub email: String,
-    #[serde(rename = "phone")]
-    pub phone: Option<String>,
-    #[serde(rename = "verified")]
-    pub verified: Option<bool>,
+    #[serde(rename = "username")]
+    pub username: String,
+    #[serde(rename = "password")]
+    pub password: String,
+    #[serde(rename = "expiration")]
+    pub expiration: DateTime<Utc>,
     #[serde(rename = "created_at")]
     pub created_at: Option<DateTime<Utc>>,
     #[serde(rename = "updated_at")]
     pub updated_at: Option<DateTime<Utc>>,
 }
 
-impl ManagedAccountInfo {
+impl SignupVerification {
     pub fn new(
-        id: UUID,
+        id: Option<UUID>,
+        code: String,
         email: String,
-        phone: Option<String>,
-        verified: Option<bool>,
+        username: String,
+        password: String,
+        expiration: DateTime<Utc>,
         created_at: Option<DateTime<Utc>>,
         updated_at: Option<DateTime<Utc>>,
     ) -> Self {
-        ManagedAccountInfo {
+        SignupVerification {
             id,
+            code,
             email,
-            phone,
-            verified,
+            username,
+            password,
+            expiration,
             created_at,
             updated_at,
         }
     }
 }
 
-impl ModelBuilder for ManagedAccountInfo {
+impl ModelBuilder for SignupVerification {
     fn table_name(&self) -> String {
-        return String::from("managed_account_info");
+        return String::from("signup_verification");
     }
 
     fn id(&self) -> String {
-        format!("'{}'", self.id)
+        match self.id {
+            Some(uuid) => format!("'{}'", uuid),
+            None => "NULL".to_string(),
+        }
     }
 
     fn to_json(&self) -> serde_json::Value {

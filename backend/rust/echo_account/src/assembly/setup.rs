@@ -11,6 +11,7 @@ use crate::{
         account_info::{new_account_info_table, AccountInfoStore},
         basic_account_info::{new_basic_account_info_table, BasicAccountInfoStore},
         managed_account_info::{new_managed_account_info_table, ManagedAccountInfoStore},
+        signup_verification::{new_signup_verification_table, SignupVerificationStore},
         wrapper::EchoDatabase,
     },
 };
@@ -35,7 +36,10 @@ pub static ECHO_POSTGRES: OnceCell<DB> = OnceCell::const_new();
 pub static ECHO_ACCOUNT_STORE: OnceCell<AccountStore> = OnceCell::const_new();
 pub static ECHO_ACCOUNT_INFO_STORE: OnceCell<AccountInfoStore> = OnceCell::const_new();
 pub static ECHO_BASIC_ACCOUNT_INFO_STORE: OnceCell<BasicAccountInfoStore> = OnceCell::const_new();
-pub static ECHO_MANAGED_ACCOUNT_STORE: OnceCell<ManagedAccountInfoStore> = OnceCell::const_new();
+pub static ECHO_MANAGED_ACCOUNT_INFO_STORE: OnceCell<ManagedAccountInfoStore> =
+    OnceCell::const_new();
+pub static ECHO_SIGNUP_VERIFICATION_STORE: OnceCell<SignupVerificationStore> =
+    OnceCell::const_new();
 
 pub static ECHO_CACHE: OnceCell<EchoCache> = OnceCell::const_new();
 pub static ECHO_CLIENT: OnceCell<RedisClient> = OnceCell::const_new();
@@ -94,9 +98,16 @@ async fn setup() {
             BasicAccountInfoStore::new(new_basic_account_info_table(&ECHO_POSTGRES.get().unwrap()))
         })
         .await;
-    ECHO_MANAGED_ACCOUNT_STORE
+    ECHO_MANAGED_ACCOUNT_INFO_STORE
         .get_or_init(|| async {
             ManagedAccountInfoStore::new(new_managed_account_info_table(
+                &ECHO_POSTGRES.get().unwrap(),
+            ))
+        })
+        .await;
+    ECHO_SIGNUP_VERIFICATION_STORE
+        .get_or_init(|| async {
+            SignupVerificationStore::new(new_signup_verification_table(
                 &ECHO_POSTGRES.get().unwrap(),
             ))
         })
@@ -107,7 +118,8 @@ async fn setup() {
                 ECHO_ACCOUNT_STORE.get().unwrap(),
                 ECHO_ACCOUNT_INFO_STORE.get().unwrap(),
                 ECHO_BASIC_ACCOUNT_INFO_STORE.get().unwrap(),
-                ECHO_MANAGED_ACCOUNT_STORE.get().unwrap(),
+                ECHO_MANAGED_ACCOUNT_INFO_STORE.get().unwrap(),
+                ECHO_SIGNUP_VERIFICATION_STORE.get().unwrap(),
             )
         })
         .await;

@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -5,25 +6,22 @@ use uuid::Uuid;
 pub struct Account {
     pub id: Uuid,
     pub username: String,
-    pub email: String,
-    pub days_active: Option<i32>,
-    pub verified: Option<bool>,
+    pub created_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime<Utc>>,
 }
 
 impl Account {
     pub fn new(
         id: Uuid,
         username: String,
-        email: String,
-        days_active: Option<i32>,
-        verified: Option<bool>,
+        created_at: Option<DateTime<Utc>>,
+        updated_at: Option<DateTime<Utc>>,
     ) -> Self {
         Account {
             id,
             username,
-            email,
-            days_active,
-            verified,
+            created_at,
+            updated_at,
         }
     }
 }

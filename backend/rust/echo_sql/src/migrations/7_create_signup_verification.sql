@@ -1,6 +1,6 @@
 CREATE TABLE signup_verification (
-	id BIGSERIAL PRIMARY KEY,
-	code UUID UNIQUE NOT NULL,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+	code varchar(255) NOT NULL,
 	username varchar(255) UNIQUE NOT NULL,
 	email varchar(255) UNIQUE NOT NULL,
 	password varchar(255) NOT NULL,

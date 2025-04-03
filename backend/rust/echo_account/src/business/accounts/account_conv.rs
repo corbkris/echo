@@ -3,24 +3,23 @@ use uuid::Uuid;
 use crate::business::account::Account as BusinessAccount;
 use crate::stores::account::Account;
 
-pub fn marshal(business_account: BusinessAccount) -> Account {
+pub fn marshal(orig: BusinessAccount) -> Account {
     Account {
-        id: Some(business_account.id),
-        username: business_account.username,
+        id: Some(orig.id),
+        username: orig.username,
         created_at: None,
         updated_at: None,
     }
 }
 
-pub fn unmarshal(model_account: Account) -> BusinessAccount {
+pub fn unmarshal(orig: Account) -> BusinessAccount {
     BusinessAccount {
-        id: match model_account.id {
+        id: match orig.id {
             Some(uuid) => uuid,
             None => Uuid::nil(),
         },
-        email: "".to_string(),
-        days_active: None,
-        verified: None,
-        username: model_account.username,
+        username: orig.username,
+        created_at: orig.created_at,
+        updated_at: orig.updated_at,
     }
 }

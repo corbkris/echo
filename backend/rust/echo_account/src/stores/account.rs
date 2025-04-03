@@ -34,12 +34,15 @@ impl<'a> AccountStore<'a> {
         .await
     }
 
-    pub async fn find_by_id(&self) -> Result<Account, PostgresError> {
-        let query = "";
+    pub async fn find_by_email(&self, email: &str) -> Result<Account, PostgresError> {
+        let query = "
+            SELECT a.*
+            FROM accounts a
+            INNER JOIN account_info ai ON ai.account_id = a.id
+            INNER JOIN managed_account_info mai ON mai.id = ai.id
+            WHERE mai.email = $1;";
 
-        let mut args = vec![Argument::Int(5), Argument::Int(5)];
-        args.push(Argument::Bool(true));
-
-        self.query(query, args).await
+        self.query(query, vec![Argument::Str(email.to_string())])
+            .await
     }
 }
