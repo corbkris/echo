@@ -1,8 +1,10 @@
 pub mod accounts;
+pub mod health;
 pub mod middleware;
 
 use accounts::controller::{basic_signup, managed_signup, send_managed_signup_code, AccountState};
 use echo_account::assembly::setup::Common;
+use health::health_check;
 use hyper::Server;
 use middleware::{
     basic::logger_handler,
@@ -19,6 +21,8 @@ async fn main() {
     info!("starting account server");
     let router = RouterService::new(
         Router::builder()
+            .middleware(Middleware::pre(logger_handler))
+            .get("/health_check", health_check)
             .scope(
                 "/accounts",
                 Router::builder()
