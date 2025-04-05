@@ -59,7 +59,7 @@ pub async fn basic_signup<'a>(req: Request<Body>) -> Result<Response<Body>, ApiE
     let body = match serde_json::to_string(&SignupPresenter {
         signup: SignupResponse {
             username: username.to_string(),
-            recovery_key,
+            recovery_key: recovery_key.to_string(),
         },
     }) {
         Ok(json) => json,
@@ -102,9 +102,17 @@ pub async fn managed_signup<'a>(req: Request<Body>) -> Result<Response<Body>, Ap
         }
     };
 
-    if let Some(err) = state.account_service.try_signup_code(req_id, code).await {
+    if let Some(err) = state.account_service.managed_signup(req_id, code).await {
         error!("{}", err);
         return Err(ApiError::Internal("failed to signup user"));
+    };
+
+    if let Some(err) = state
+        .account_service
+        .delete_signup_verification_by_req_id(req_id)
+        .await
+    {
+        error!("{}", err);
     };
 
     Ok(Response::builder()
@@ -156,7 +164,7 @@ pub async fn send_managed_signup_code<'a>(
 
     let req_id = match state
         .account_service
-        .send_managed_signup_verification(email, username, password)
+        .send_managed_signup_verification_code(email, username, password)
         .await
     {
         Ok(req_id) => req_id,
@@ -168,7 +176,7 @@ pub async fn send_managed_signup_code<'a>(
 
     Ok(Response::builder()
         .status(StatusCode::OK)
-        .header("x-signup-req-id", req_id)
+        .header("x-signup-req-id", req_id.to_string())
         .body(Body::empty())
         .unwrap())
 }

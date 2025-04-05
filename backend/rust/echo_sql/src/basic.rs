@@ -79,7 +79,9 @@ where
         .iter()
         .filter_map(|(key, value)| match value {
             Value::Null => None,
-            Value::String(s) if !s.is_empty() => Some(key.to_string()),
+            Value::String(s) if !s.is_empty() && s != "1970-01-01T00:00:00Z" => {
+                Some(key.to_string())
+            }
             Value::Number(_) => Some(key.to_string()),
             Value::Bool(_) => Some(key.to_string()),
             _ => None,
@@ -92,7 +94,9 @@ where
         .values()
         .filter_map(|value| match value {
             Value::Null => None,
-            Value::String(s) if !s.is_empty() => Some(format!("'{}'", s)),
+            Value::String(s) if !s.is_empty() && s != "1970-01-01T00:00:00Z" => {
+                Some(format!("'{}'", s))
+            }
             Value::Number(n) => Some(n.to_string()),
             Value::Bool(b) => Some(b.to_string()),
             _ => None,
@@ -130,7 +134,9 @@ where
 
             match value {
                 Value::Null => None,
-                Value::String(s) if !s.is_empty() => Some(format!("{} = '{}'", key, s)),
+                Value::String(s) if !s.is_empty() && s != "1970-01-01T00:00:00Z" => {
+                    Some(format!("{} = '{}'", key, s))
+                }
                 Value::Number(n) => Some(format!("{} = {}", key, n)),
                 Value::Bool(b) => Some(format!("{} = {}", key, b)),
                 _ => None,

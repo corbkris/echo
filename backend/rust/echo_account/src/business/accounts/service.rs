@@ -27,11 +27,8 @@ impl<'a> Service<'a> {
         Service { db, cache, que }
     }
 
-    pub async fn basic_signup(
-        &self,
-        username: &str,
-        password: &str,
-    ) -> Result<String, ServiceError> {
+    // returns recovery key
+    pub async fn basic_signup(&self, username: &str, password: &str) -> Result<Uuid, ServiceError> {
         let hashed = match hash(password, DEFAULT_COST) {
             Ok(hashed) => hashed,
             Err(err) => {
@@ -76,10 +73,10 @@ impl<'a> Service<'a> {
             error!("failed to insert basic_account_info, {}", err);
             return Err(ServiceError::Postgres(err));
         };
-        return Ok(basic_account_info.recovery_key.to_string());
+        return Ok(basic_account_info.recovery_key);
     }
 
-    pub async fn try_signup_code(&self, req_id: Uuid, code: &str) -> Option<ServiceError> {
+    pub async fn managed_signup(&self, req_id: Uuid, code: &str) -> Option<ServiceError> {
         let signup_verification = match self
             .db
             .signup_verification
@@ -138,12 +135,12 @@ impl<'a> Service<'a> {
     }
 
     //returns request_id
-    pub async fn send_managed_signup_verification(
+    pub async fn send_managed_signup_verification_code(
         &self,
         email: &str,
         username: &str,
         password: &str,
-    ) -> Result<String, ServiceError> {
+    ) -> Result<Uuid, ServiceError> {
         let hashed = match hash(password, DEFAULT_COST) {
             Ok(hashed) => hashed,
             Err(err) => {
@@ -193,6 +190,6 @@ impl<'a> Service<'a> {
             }
         };
 
-        Ok(signup_verification.id.unwrap().to_string())
+        Ok(signup_verification.id.unwrap())
     }
 }
