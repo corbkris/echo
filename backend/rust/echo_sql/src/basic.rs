@@ -172,7 +172,9 @@ where
         .iter()
         .filter_map(|(key, value)| match value {
             Value::Null => None,
-            Value::String(s) if !s.is_empty() => Some(format!("{} {} '{}'", key, comparison, s)),
+            Value::String(s) if !s.is_empty() && s != "1970-01-01T00:00:00Z" => {
+                Some(format!("{} {} '{}'", key, comparison, s))
+            }
             Value::Number(n) => Some(format!("{} {} {}", key, comparison, n)),
             Value::Bool(b) => Some(format!("{} {} {}", key, comparison, b)),
             _ => None,

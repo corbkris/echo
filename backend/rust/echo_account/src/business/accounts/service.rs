@@ -83,7 +83,7 @@ impl<'a> Service<'a> {
         let signup_verification = match self
             .db
             .signup_verification
-            .find_unexpired_by_id_code(req_id, code)
+            .find_by_id_code(req_id, code)
             .await
         {
             Ok(signup_verification) => signup_verification,
@@ -92,6 +92,10 @@ impl<'a> Service<'a> {
                 return Some(ServiceError::Postgres(err));
             }
         };
+
+        if signup_verification.expiration <= Utc::now() {
+            return Some(ServiceError::Internal("verification expired"));
+        }
 
         let mut account = Account {
             username: signup_verification.username,

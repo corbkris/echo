@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 #[derive(sqlx::Type, Serialize, Deserialize, Debug)]
-#[sqlx(type_name = "account_type")] // Match the PostgreSQL enum type name
 #[serde(rename_all = "lowercase")] // Optional: Match enum variants to lowercase strings for JSON
+#[sqlx(type_name = "account_type", rename_all = "lowercase")] // Match the PostgreSQL enum type name
 pub enum AccountType {
     Basic,
     Managed,

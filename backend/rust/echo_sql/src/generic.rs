@@ -18,6 +18,7 @@ pub enum Argument {
     Str(String),
     Float(f64),
     Bool(bool),
+    Uuid(UUID),
 }
 
 pub struct DB<'a> {
@@ -114,6 +115,7 @@ impl<'a> DB<'a> {
                 Argument::Str(s) => query = query.bind(s),
                 Argument::Float(f) => query = query.bind(f),
                 Argument::Bool(b) => query = query.bind(b),
+                Argument::Uuid(u) => query = query.bind(u),
             }
         }
         query.fetch_one(self.pool).await
@@ -134,6 +136,7 @@ impl<'a> DB<'a> {
                 Argument::Str(s) => query = query.bind(s),
                 Argument::Float(f) => query = query.bind(f),
                 Argument::Bool(b) => query = query.bind(b),
+                Argument::Uuid(u) => query = query.bind(u),
             }
         }
         query.fetch_all(self.pool).await

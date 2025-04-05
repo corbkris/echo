@@ -30,7 +30,6 @@ use echo_sql::{
 use tokio::sync::OnceCell;
 use tracing::info;
 
-pub static ECHO_DB: OnceCell<EchoDatabase> = OnceCell::const_new();
 pub static ECHO_POOL: OnceCell<PostgresPool> = OnceCell::const_new();
 pub static ECHO_POSTGRES: OnceCell<DB> = OnceCell::const_new();
 pub static ECHO_ACCOUNT_STORE: OnceCell<AccountStore> = OnceCell::const_new();
@@ -40,20 +39,21 @@ pub static ECHO_MANAGED_ACCOUNT_INFO_STORE: OnceCell<ManagedAccountInfoStore> =
     OnceCell::const_new();
 pub static ECHO_SIGNUP_VERIFICATION_STORE: OnceCell<SignupVerificationStore> =
     OnceCell::const_new();
+pub static ECHO_DB: OnceCell<EchoDatabase> = OnceCell::const_new();
 
-pub static ECHO_CACHE: OnceCell<EchoCache> = OnceCell::const_new();
 pub static ECHO_CLIENT: OnceCell<RedisClient> = OnceCell::const_new();
 pub static ECHO_REDIS: OnceCell<Cache> = OnceCell::const_new();
 pub static ECHO_ACCOUNT_CACHE: OnceCell<AccountCache> = OnceCell::const_new();
+pub static ECHO_CACHE: OnceCell<EchoCache> = OnceCell::const_new();
 
+pub static ECHO_CONNECTION: OnceCell<RabbitConnection> = OnceCell::const_new();
+pub static ECHO_QUEUE: OnceCell<Que> = OnceCell::const_new();
+pub static ECHO_EMAIL_QUEUE: OnceCell<EmailQue> = OnceCell::const_new();
+pub static ECHO_EMAIL_CHANNEL: OnceCell<RabbitChannel> = OnceCell::const_new();
 pub static ECHO_QUEUES: OnceCell<EchoQue> = OnceCell::const_new();
-pub static QUE_CONNECTION: OnceCell<RabbitConnection> = OnceCell::const_new();
-pub static QUE_QUEUE: OnceCell<Que> = OnceCell::const_new();
-pub static QUE_EMAIL_QUEUE: OnceCell<EmailQue> = OnceCell::const_new();
-pub static QUE_EMAIL_CHANNEL: OnceCell<RabbitChannel> = OnceCell::const_new();
 
-pub static ECHO_SERVICES: OnceCell<Wrapper> = OnceCell::const_new();
 pub static ECHO_ACCOUNT_SERVICES: OnceCell<AccountService> = OnceCell::const_new();
+pub static ECHO_SERVICES: OnceCell<Wrapper> = OnceCell::const_new();
 
 pub struct Common<'a> {
     pub db: &'a EchoDatabase<'a>,
@@ -139,18 +139,18 @@ async fn setup() {
         .await;
 
     let rabbit_connection = RabbitConfig::new().connect().await.unwrap();
-    QUE_CONNECTION
+    ECHO_CONNECTION
         .get_or_init(|| async { rabbit_connection })
         .await;
-    QUE_QUEUE
-        .get_or_init(|| async { Que::new(QUE_CONNECTION.get().unwrap()) })
+    ECHO_QUEUE
+        .get_or_init(|| async { Que::new(ECHO_CONNECTION.get().unwrap()) })
         .await;
-    QUE_EMAIL_QUEUE
-        .get_or_init(|| async { EmailQue::new(QUE_QUEUE.get().unwrap()) })
+    ECHO_EMAIL_QUEUE
+        .get_or_init(|| async { EmailQue::new(ECHO_QUEUE.get().unwrap()) })
         .await;
-    QUE_EMAIL_CHANNEL
+    ECHO_EMAIL_CHANNEL
         .get_or_init(|| async {
-            QUE_EMAIL_QUEUE
+            ECHO_EMAIL_QUEUE
                 .get()
                 .unwrap()
                 .create_email_channel()
@@ -161,8 +161,8 @@ async fn setup() {
     ECHO_QUEUES
         .get_or_init(|| async {
             EchoQue::new(
-                QUE_EMAIL_QUEUE.get().unwrap(),
-                QUE_EMAIL_CHANNEL.get().unwrap(),
+                ECHO_EMAIL_QUEUE.get().unwrap(),
+                ECHO_EMAIL_CHANNEL.get().unwrap(),
             )
         })
         .await;

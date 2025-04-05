@@ -1,4 +1,3 @@
-use chrono::Utc;
 use echo_sql::{
     basic::{ComparisonOperator, ConditonalOperator},
     generic::{Argument, PostgresError, DB},
@@ -24,7 +23,7 @@ impl<'a> SignupVerificationStore<'a> {
         Self { base_table }
     }
 
-    pub async fn find_unexpired_by_id_code(
+    pub async fn find_by_id_code(
         &self,
         id: Uuid,
         code: &str,
@@ -33,17 +32,11 @@ impl<'a> SignupVerificationStore<'a> {
             SELECT sv.*
             FROM signup_verification sv
             WHERE sv.id = $1
-            AND sv.code = $2
-            AND sv.expiration > $1
-            ";
+            AND sv.code = $2";
 
         self.query(
             query,
-            vec![
-                Argument::Str(id.to_string()),
-                Argument::Str(code.to_string()),
-                Argument::Str(Utc::now().to_string()),
-            ],
+            vec![Argument::Uuid(id), Argument::Str(code.to_string())],
         )
         .await
     }
