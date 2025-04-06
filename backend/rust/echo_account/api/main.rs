@@ -31,11 +31,11 @@ async fn main() {
                     .post("/sign_up/basic", basic_signup)
                     .post("/sign_up/managed", send_managed_signup_code)
                     .post("/sign_up/managed/:code", managed_signup)
+                    .err_handler(error_handler)
                     .any(handler_404)
                     .build()
                     .unwrap(),
             )
-            .err_handler(error_handler)
             .any(handler_404)
             .build()
             .unwrap(),
@@ -43,24 +43,24 @@ async fn main() {
     .unwrap();
 
     // The address on which the server will be listening.
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3001));
 
     // Create a server by passing the created service to `.serve` method.
     let server = Server::bind(&addr).serve(router);
 
-    println!("App is running on: {}", addr);
+    info!("App is running on: {}", addr);
     let server_future = tokio::spawn(server);
 
     // Graceful shutdown on Ctrl+C
     tokio::select! {
         _ = tokio::signal::ctrl_c() => {
-            println!("Shutting down gracefully...");
+            info!("Shutting down gracefully...");
             // Drop or close resources here, if needed
             // For example: close DB connections, cache clients, etc.
             // Since you are using LazyLock, the resources should be dropped when the program exits
         },
         _ = server_future => {
-            println!("Server exited.");
+            info!("Server exited.");
         },
     }
 }

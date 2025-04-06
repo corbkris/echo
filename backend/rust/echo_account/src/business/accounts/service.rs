@@ -1,9 +1,10 @@
 use std::char;
 
+use crate::business::account::Account;
+use crate::business::accounts::account_conv::marshal;
 use crate::caches::wrapper::EchoCache;
 use crate::queues::email::EmailSigup;
 use crate::queues::wrapper::EchoQue;
-use crate::stores::account::Account;
 use crate::stores::account_info::AccountInfo;
 use crate::stores::basic_account_info::BasicAccountInfo;
 use crate::stores::signup_verification::SignupVerification;
@@ -37,39 +38,34 @@ impl<'a> Service<'a> {
             }
         };
 
-        let mut account = Account {
+        let account = &mut marshal(Account {
             username: username.to_string(),
             ..Default::default()
-        };
+        });
 
-        if let Some(err) = self.db.accounts.insert(&mut account).await {
+        if let Some(err) = self.db.accounts.insert(account).await {
             error!("failed to insert account, {}", err);
             return Err(ServiceError::Postgres(err));
         };
 
-        let mut account_info = AccountInfo {
+        let account_info = &mut AccountInfo {
             account_id: account.id.unwrap(),
             password: hashed,
             ..Default::default()
         };
 
-        if let Some(err) = self.db.account_info.insert(&mut account_info).await {
+        if let Some(err) = self.db.account_info.insert(account_info).await {
             error!("failed to insert account_info, {}", err);
             return Err(ServiceError::Postgres(err));
         };
 
-        let mut basic_account_info = BasicAccountInfo {
+        let basic_account_info = &mut BasicAccountInfo {
             id: account_info.id.unwrap(),
             recovery_key: Uuid::new_v4(),
             ..Default::default()
         };
 
-        if let Some(err) = self
-            .db
-            .basic_account_info
-            .insert(&mut basic_account_info)
-            .await
-        {
+        if let Some(err) = self.db.basic_account_info.insert(basic_account_info).await {
             error!("failed to insert basic_account_info, {}", err);
             return Err(ServiceError::Postgres(err));
         };
@@ -94,28 +90,28 @@ impl<'a> Service<'a> {
             return Some(ServiceError::Internal("verification expired"));
         }
 
-        let mut account = Account {
+        let account = &mut marshal(Account {
             username: signup_verification.username,
             ..Default::default()
-        };
+        });
 
-        if let Some(err) = self.db.accounts.insert(&mut account).await {
+        if let Some(err) = self.db.accounts.insert(account).await {
             error!("failed to insert account, {}", err);
             return Some(ServiceError::Postgres(err));
         };
 
-        let mut account_info = AccountInfo {
+        let account_info = &mut AccountInfo {
             account_id: account.id.unwrap(),
             password: signup_verification.password,
             ..Default::default()
         };
 
-        if let Some(err) = self.db.account_info.insert(&mut account_info).await {
+        if let Some(err) = self.db.account_info.insert(account_info).await {
             error!("failed to insert account_info, {}", err);
             return Some(ServiceError::Postgres(err));
         };
 
-        let mut managed_account_info = ManagedAccountInfo {
+        let managed_account_info = &mut ManagedAccountInfo {
             id: account_info.id.unwrap(),
             email: signup_verification.email,
             ..Default::default()
@@ -124,7 +120,7 @@ impl<'a> Service<'a> {
         if let Some(err) = self
             .db
             .managed_account_info
-            .insert(&mut managed_account_info)
+            .insert(managed_account_info)
             .await
         {
             error!("failed to insert managed_account_info, {}", err);
@@ -155,7 +151,7 @@ impl<'a> Service<'a> {
             .map(char::from)
             .collect();
 
-        let mut signup_verification = SignupVerification {
+        let signup_verification = &mut SignupVerification {
             email: email.to_string(),
             username: username.to_string(),
             password: hashed.to_string(),
@@ -167,7 +163,7 @@ impl<'a> Service<'a> {
         if let Some(err) = self
             .db
             .signup_verification
-            .insert(&mut signup_verification)
+            .insert(signup_verification)
             .await
         {
             error!("failed to insert signup_verification, {}", err);
