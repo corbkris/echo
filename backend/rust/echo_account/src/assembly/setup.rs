@@ -28,7 +28,8 @@ use echo_sql::{
     generic::DB,
 };
 use tokio::sync::OnceCell;
-use tracing::info;
+use tracing;
+use tracing_appender::non_blocking::WorkerGuard;
 
 pub static ECHO_POOL: OnceCell<PostgresPool> = OnceCell::const_new();
 pub static ECHO_POSTGRES: OnceCell<DB> = OnceCell::const_new();
@@ -55,7 +56,10 @@ pub static ECHO_QUEUES: OnceCell<EchoQue> = OnceCell::const_new();
 pub static ECHO_ACCOUNT_SERVICES: OnceCell<AccountService> = OnceCell::const_new();
 pub static ECHO_SERVICES: OnceCell<Wrapper> = OnceCell::const_new();
 
+pub static ECHO_GAURD: OnceCell<WorkerGuard> = OnceCell::const_new();
+
 pub struct Common<'a> {
+    pub gaurd: &'a WorkerGuard,
     pub db: &'a EchoDatabase<'a>,
     pub cache: &'a EchoCache<'a>,
     pub que: &'a EchoQue<'a>,
@@ -64,10 +68,10 @@ pub struct Common<'a> {
 
 impl<'a> Common<'a> {
     pub async fn new() -> Self {
-        register_subscriber("rustaccount.log");
-        info!("starting account services");
         setup().await;
+        tracing::info!("services started");
         Self {
+            gaurd: ECHO_GAURD.get().unwrap(),
             db: ECHO_DB.get().unwrap(),
             cache: ECHO_CACHE.get().unwrap(),
             que: ECHO_QUEUES.get().unwrap(),
@@ -77,6 +81,10 @@ impl<'a> Common<'a> {
 }
 
 async fn setup() {
+    ECHO_GAURD
+        .get_or_init(|| async { register_subscriber("rustaccount.log") })
+        .await;
+
     let postgres = PostgresConfig::new().connect().await.unwrap();
     ECHO_POOL.get_or_init(|| async { postgres }).await;
     ECHO_POSTGRES
