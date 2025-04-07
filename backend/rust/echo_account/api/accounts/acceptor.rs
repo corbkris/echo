@@ -5,7 +5,7 @@ use serde_json::from_slice;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SignupRequest {
-    pub email: String,
+    pub email: Option<String>,
     pub username: String,
     pub password: String,
 }

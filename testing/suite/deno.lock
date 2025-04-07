@@ -1,13 +1,19 @@
 {
   "version": "4",
   "specifiers": {
+    "jsr:@jackfiszr/faker@1.1.6": "1.1.6",
     "jsr:@std/assert@1": "1.0.12",
     "jsr:@std/assert@^1.0.12": "1.0.12",
     "jsr:@std/expect@*": "1.0.14",
     "jsr:@std/internal@^1.0.6": "1.0.6",
-    "jsr:@std/testing@*": "1.0.10"
+    "jsr:@std/testing@*": "1.0.10",
+    "npm:@faker-js/faker@*": "9.6.0",
+    "npm:faker@*": "6.6.6"
   },
   "jsr": {
+    "@jackfiszr/faker@1.1.6": {
+      "integrity": "0d04ca2a13889243670c17ef30d318208c918a7c6a5afbdb6e0958d4cd71e98b"
+    },
     "@std/assert@1.0.12": {
       "integrity": "08009f0926dda9cbd8bef3a35d3b6a4b964b0ab5c3e140a4e0351fbf34af5b9a",
       "dependencies": [
@@ -30,6 +36,14 @@
         "jsr:@std/assert@^1.0.12",
         "jsr:@std/internal"
       ]
+    }
+  },
+  "npm": {
+    "@faker-js/faker@9.6.0": {
+      "integrity": "sha512-3vm4by+B5lvsFPSyep3ELWmZfE3kicDtmemVpuwl1yH7tqtnHdsA6hG8fbXedMVdkzgtvzWoRgjSB4Q+FHnZiw=="
+    },
+    "faker@6.6.6": {
+      "integrity": "sha512-9tCqYEDHI5RYFQigXFwF1hnCwcWCOJl/hmll0lr5D2Ljjb0o4wphb69wikeJDz5qCEzXCoPvG6ss5SDP6IfOdg=="
     }
   },
   "workspace": {

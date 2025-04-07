@@ -130,7 +130,7 @@ pub async fn send_managed_signup_code<'a>(
     let state = parts.data::<AccountState>().unwrap();
     let signup_data = marshal_signup(body).await?;
 
-    let email: &str = &signup_data.signup.email;
+    let email: &str = &signup_data.signup.email.unwrap();
     let username: &str = &signup_data.signup.username;
     let password: &str = &signup_data.signup.password;
 
