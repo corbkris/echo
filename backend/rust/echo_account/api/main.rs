@@ -27,9 +27,9 @@ async fn main() {
                 "/accounts",
                 Router::builder()
                     .data(AccountState::new(common.services.account_service))
-                    .post("/sign_up/basic", basic_signup)
-                    .post("/sign_up/managed", send_managed_signup_code)
-                    .post("/sign_up/managed/:code", managed_signup)
+                    .post("/signup/basic", basic_signup)
+                    .post("/signup/managed", send_managed_signup_code)
+                    .post("/signup/managed/:code", managed_signup)
                     .err_handler(error_handler)
                     .build()
                     .unwrap(),

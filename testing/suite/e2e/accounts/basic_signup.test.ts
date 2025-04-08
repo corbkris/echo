@@ -10,7 +10,7 @@ Deno.test("basic_signup", async () => {
       password: faker.internet.password(),
     },
   };
-  const res = await fetch(`${config.account_server}/accounts/sign_up/basic`, {
+  const res = await fetch(`${config.account_server}/accounts/signup/basic`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

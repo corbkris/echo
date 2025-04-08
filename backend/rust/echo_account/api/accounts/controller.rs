@@ -87,6 +87,8 @@ pub async fn managed_signup<'a>(req: Request<Body>) -> Result<Response<Body>, Ap
             return Err(ApiError::BadRequest("missing code"));
         }
     };
+    //TODO
+    //update this o non allow empty
     let req_id = match Uuid::from_str(
         parts
             .headers
