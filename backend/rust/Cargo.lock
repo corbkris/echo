@@ -411,6 +411,7 @@ name = "echo_account"
 version = "0.1.0"
 dependencies = [
  "bcrypt",
+ "chrono",
  "echo_jwt",
  "echo_rabbit",
  "echo_redis",
@@ -477,6 +478,7 @@ dependencies = [
  "serde_json",
  "sqlx",
  "tokio",
+ "uuid 1.16.0",
 ]
 
 [[package]]
@@ -2673,6 +2675,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "458f7a779bf54acc9f347480ac654f68407d3aab21269a6e3c9f922acd9e2da9"
 dependencies = [
  "getrandom 0.3.2",
+ "serde",
 ]
 
 [[package]]

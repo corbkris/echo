@@ -1,31 +1,27 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Account {
-    pub id: String,
+    pub id: Option<Uuid>,
     pub username: String,
-    pub email: String,
-    pub password: String,
-    pub days_active: Option<i32>,
-    pub verified: Option<bool>,
+    pub created_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime<Utc>>,
 }
 
 impl Account {
     pub fn new(
-        id: String,
+        id: Option<Uuid>,
         username: String,
-        email: String,
-        password: String,
-        days_active: Option<i32>,
-        verified: Option<bool>,
+        created_at: Option<DateTime<Utc>>,
+        updated_at: Option<DateTime<Utc>>,
     ) -> Self {
         Account {
             id,
             username,
-            email,
-            password,
-            days_active,
-            verified,
+            created_at,
+            updated_at,
         }
     }
 }

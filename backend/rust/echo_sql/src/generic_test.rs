@@ -2,7 +2,7 @@
 mod tests {
     use crate::connection::Config;
     use crate::generic::DB;
-    use crate::models::account::Account;
+    use crate::tables::account::Account;
 
     #[tokio::test]
     async fn test_db() {
@@ -14,15 +14,9 @@ mod tests {
             }
         };
         let db = DB::new(&conn);
-        let mut account = Account::new(
-            "".to_string(),
-            "cardboard1234".to_string(),
-            "corbin1234".to_string(),
-            None,
-            None,
-        );
+        let mut account = Account::new(None, "cardboard1234".to_string(), None, None);
         let result = db.insert(&mut account).await;
         assert!(result.is_none());
-        assert_ne!(account.id, "");
+        assert_ne!(account.id, None);
     }
 }

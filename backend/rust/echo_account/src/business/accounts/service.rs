@@ -1,19 +1,20 @@
-use crate::business::errors::ServiceError;
-use crate::caches::{account::Account as RedisAccount, wrapper::EchoCache};
+use std::char;
+
+use crate::business::account::Account;
+use crate::business::accounts::account_conv::marshal;
+use crate::caches::wrapper::EchoCache;
 use crate::queues::email::EmailSigup;
 use crate::queues::wrapper::EchoQue;
-use crate::stores::{
-    account::{StoreComparisonOperator, StoreConditionalOperator},
-    wrapper::EchoDatabase,
-};
-
-use crate::business::{
-    account::Account,
-    accounts::conversion::{marshal, unmarshal},
-};
+use crate::stores::account_info::AccountInfo;
+use crate::stores::basic_account_info::BasicAccountInfo;
+use crate::stores::signup_verification::SignupVerification;
+use crate::stores::wrapper::EchoDatabase;
+use crate::{business::errors::ServiceError, stores::managed_account_info::ManagedAccountInfo};
 
 use bcrypt::{hash, DEFAULT_COST};
+use chrono::Utc;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use tracing::error;
 use uuid::Uuid;
 
 pub struct Service<'a> {
@@ -27,144 +28,164 @@ impl<'a> Service<'a> {
         Service { db, cache, que }
     }
 
-    pub async fn signup(
-        &self,
-        email: String,
-        mut password: String,
-    ) -> Result<String, ServiceError> {
-        match self.find_by_email(&email).await {
-            Ok(_) => return Err(ServiceError::Generic("email already exists".to_string())),
-            Err(_) => {}
+    // returns recovery key
+    pub async fn basic_signup(&self, username: &str, password: &str) -> Result<Uuid, ServiceError> {
+        let hashed = match hash(password, DEFAULT_COST) {
+            Ok(hashed) => hashed,
+            Err(err) => {
+                error!("failed to hash password,{}", err);
+                return Err(ServiceError::Generic(err.to_string()));
+            }
         };
 
-        password = match hash(password, DEFAULT_COST) {
-            Ok(hashed) => hashed,
-            Err(err) => return Err(ServiceError::Generic(err.to_string())),
+        let account = &mut marshal(Account {
+            username: username.to_string(),
+            ..Default::default()
+        });
+
+        if let Some(err) = self.db.accounts.insert(account).await {
+            error!("failed to insert account, {}", err);
+            return Err(ServiceError::Postgres(err));
         };
-        let secret_code: String = thread_rng()
+
+        let account_info = &mut AccountInfo {
+            account_id: account.id.unwrap(),
+            password: hashed,
+            ..Default::default()
+        };
+
+        if let Some(err) = self.db.account_info.insert(account_info).await {
+            error!("failed to insert account_info, {}", err);
+            return Err(ServiceError::Postgres(err));
+        };
+
+        let basic_account_info = &mut BasicAccountInfo {
+            id: account_info.id.unwrap(),
+            recovery_key: Uuid::new_v4(),
+            ..Default::default()
+        };
+
+        if let Some(err) = self.db.basic_account_info.insert(basic_account_info).await {
+            error!("failed to insert basic_account_info, {}", err);
+            return Err(ServiceError::Postgres(err));
+        };
+        return Ok(basic_account_info.recovery_key);
+    }
+
+    pub async fn managed_signup(&self, req_id: Uuid, code: &str) -> Option<ServiceError> {
+        let signup_verification = match self
+            .db
+            .signup_verification
+            .find_by_id_code(req_id, code)
+            .await
+        {
+            Ok(signup_verification) => signup_verification,
+            Err(err) => {
+                error!("failed to find signup_verification, {}", err);
+                return Some(ServiceError::Postgres(err));
+            }
+        };
+
+        if signup_verification.expiration <= Utc::now() {
+            return Some(ServiceError::Internal("verification expired"));
+        }
+
+        let account = &mut marshal(Account {
+            username: signup_verification.username,
+            ..Default::default()
+        });
+
+        if let Some(err) = self.db.accounts.insert(account).await {
+            error!("failed to insert account, {}", err);
+            return Some(ServiceError::Postgres(err));
+        };
+
+        let account_info = &mut AccountInfo {
+            account_id: account.id.unwrap(),
+            password: signup_verification.password,
+            ..Default::default()
+        };
+
+        if let Some(err) = self.db.account_info.insert(account_info).await {
+            error!("failed to insert account_info, {}", err);
+            return Some(ServiceError::Postgres(err));
+        };
+
+        let managed_account_info = &mut ManagedAccountInfo {
+            id: account_info.id.unwrap(),
+            email: signup_verification.email,
+            ..Default::default()
+        };
+
+        if let Some(err) = self
+            .db
+            .managed_account_info
+            .insert(managed_account_info)
+            .await
+        {
+            error!("failed to insert managed_account_info, {}", err);
+            return Some(ServiceError::Postgres(err));
+        };
+
+        None
+    }
+
+    //returns request_id
+    pub async fn send_managed_signup_verification_code(
+        &self,
+        email: &str,
+        username: &str,
+        password: &str,
+    ) -> Result<Uuid, ServiceError> {
+        let hashed = match hash(password, DEFAULT_COST) {
+            Ok(hashed) => hashed,
+            Err(err) => {
+                error!("failed to hash password,{}", err);
+                return Err(ServiceError::Generic(err.to_string()));
+            }
+        };
+
+        let code: String = thread_rng()
             .sample_iter(&Alphanumeric)
             .take(7)
             .map(char::from)
             .collect();
 
-        let signup_key = Uuid::new_v4().to_string();
+        let signup_verification = &mut SignupVerification {
+            email: email.to_string(),
+            username: username.to_string(),
+            password: hashed.to_string(),
+            code: code.to_string(),
+            expiration: Utc::now() + chrono::Duration::minutes(5),
+            ..Default::default()
+        };
 
-        match self
-            .cache
-            .accounts
-            .set_signup(
-                &signup_key,
-                &RedisAccount::new(&email, &password, &secret_code),
-            )
+        if let Some(err) = self
+            .db
+            .signup_verification
+            .insert(signup_verification)
             .await
         {
-            Ok(_) => {}
-            Err(err) => return Err(ServiceError::Redis(err)),
-        }
+            error!("failed to insert signup_verification, {}", err);
+            return Err(ServiceError::Postgres(err));
+        };
 
         match self
             .que
             .emails
             .publish_email(
-                &self.que.email_channel,
-                &EmailSigup::new(email, secret_code.to_string().to_string()),
+                self.que.email_channel,
+                &EmailSigup::new(email.to_string(), code.to_string()),
             )
             .await
         {
-            Ok(_) => Ok(signup_key),
-            Err(err) => Err(ServiceError::Rabbit(err)),
-        }
-    }
-
-    pub async fn try_signup_code(
-        &self,
-        code: &str,
-        signup_key: &str,
-    ) -> Result<Account, ServiceError> {
-        let account = match self.cache.accounts.get_signup(signup_key).await {
-            Ok(account) => account,
-            Err(err) => return Err(ServiceError::Generic(err)),
+            Ok(_) => {}
+            Err(err) => {
+                error!("failed to enqueue signup, {}", err);
+                return Err(ServiceError::Rabbit(err));
+            }
         };
 
-        if account.code != code {
-            return Err(ServiceError::Generic("invalid code".to_string()));
-        }
-
-        let mut marshaled_account = marshal(Account {
-            email: account.email,
-            password: account.password,
-            ..Default::default()
-        });
-
-        match self.db.accounts.insert(&mut marshaled_account).await {
-            None => Ok(unmarshal(marshaled_account)),
-            Some(err) => Err(ServiceError::Postgres(err)),
-        }
-    }
-
-    pub async fn login(
-        &self,
-        email: String,
-        mut password: String,
-    ) -> Result<Account, ServiceError> {
-        password = match hash(password, DEFAULT_COST) {
-            Ok(hashed) => hashed,
-            Err(err) => return Err(ServiceError::Generic(err.to_string())),
-        };
-        match self
-            .db
-            .accounts
-            .basic_search_single(
-                &marshal(Account {
-                    email,
-                    password,
-                    ..Default::default()
-                }),
-                StoreComparisonOperator::Equal,
-                StoreConditionalOperator::AND,
-            )
-            .await
-        {
-            Ok(account) => Ok(unmarshal(account)),
-            Err(err) => Err(ServiceError::Postgres(err)),
-        }
-    }
-
-    async fn find_by_email(&self, email: &str) -> Result<Account, ServiceError> {
-        match self
-            .db
-            .accounts
-            .basic_search_single(
-                &marshal(Account {
-                    email: email.to_string(),
-                    ..Default::default()
-                }),
-                StoreComparisonOperator::Equal,
-                StoreConditionalOperator::Basic,
-            )
-            .await
-        {
-            Ok(account) => return Ok(unmarshal(account)),
-            Err(err) => return Err(ServiceError::Postgres(err)),
-        }
-    }
-
-    pub async fn find_by_id(&self, id: &str) -> Result<Account, ServiceError> {
-        match self
-            .db
-            .accounts
-            .basic_search_single(
-                &marshal(Account {
-                    id: id.to_string(),
-                    ..Default::default()
-                }),
-                StoreComparisonOperator::Equal,
-                StoreConditionalOperator::Basic,
-            )
-            .await
-        {
-            Ok(account) => return Ok(unmarshal(account)),
-            Err(err) => return Err(ServiceError::Postgres(err)),
-        }
+        Ok(signup_verification.id.unwrap())
     }
 }

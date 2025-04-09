@@ -1,7 +1,7 @@
 use echo_sql::{
     basic::{ComparisonOperator, ConditonalOperator},
     generic::{PostgresError, PostgresQueryResult, DB},
-    models::booth::Booth as ModelBooth,
+    tables::booth::Booth as ModelBooth,
 };
 pub type Booth = ModelBooth;
 
