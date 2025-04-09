@@ -1,6 +1,7 @@
 pub mod accounts;
 pub mod health;
 pub mod middleware;
+pub mod utility;
 
 use accounts::controller::{basic_signup, managed_signup, send_managed_signup_code, AccountState};
 use echo_account::assembly::setup::Common;

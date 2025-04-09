@@ -1,16 +1,16 @@
-use std::str::FromStr;
-
 use crate::accounts::{
     acceptor::marshal_signup,
     presenter::{SignupPresenter, SignupResponse},
 };
-use crate::middleware::error::ApiError;
+use crate::{
+    middleware::error::ApiError,
+    utility::{header::parse_header_uuid, route::parse_route_param},
+};
 use echo_account::business::{accounts::service::Service as account_service, errors::ServiceError};
 use echo_sql::generic::PostgresError;
 use hyper::{header, Body, Request, Response, StatusCode};
 use routerify::prelude::*;
 use tracing::{error, instrument};
-use uuid::Uuid;
 
 pub struct AccountState<'a> {
     pub account_service: &'a account_service<'a>,
@@ -81,30 +81,10 @@ pub async fn managed_signup<'a>(req: Request<Body>) -> Result<Response<Body>, Ap
     let (parts, _) = req.into_parts();
 
     let state = parts.data::<AccountState>().unwrap();
-    let code = match parts.param("code") {
-        Some(code) => code,
-        None => {
-            return Err(ApiError::BadRequest("missing code"));
-        }
-    };
-    //TODO
-    //update this o non allow empty
-    let req_id = match Uuid::from_str(
-        parts
-            .headers
-            .get("x-signup-req-id")
-            .unwrap()
-            .to_str()
-            .unwrap(),
-    ) {
-        Ok(req_id) => req_id,
-        Err(err) => {
-            error!("{}", err);
-            return Err(ApiError::BadRequest("invalid/missing req_id"));
-        }
-    };
+    let code = parse_route_param(parts.params(), "code")?;
+    let req_id = parse_header_uuid(&parts.headers, "x-signup-req-id")?;
 
-    if let Some(err) = state.account_service.managed_signup(req_id, code).await {
+    if let Some(err) = state.account_service.managed_signup(req_id, &code).await {
         error!("{}", err);
         return Err(ApiError::Internal("failed to signup user"));
     };

@@ -7,6 +7,7 @@ pub enum ApiError<'a> {
     Unauthorized,
     Internal(&'a str),
     BadRequest(&'a str),
+    BadRequestFmt(&'a str, &'a str),
     NotFound(&'a str),
 }
 
@@ -18,6 +19,7 @@ impl<'a> fmt::Display for ApiError<'a> {
             ApiError::Unauthorized => write!(f, "Unauthorized"),
             ApiError::Internal(s) => write!(f, "Internal: {}", s),
             ApiError::BadRequest(s) => write!(f, "Bad Request: {}", s),
+            ApiError::BadRequestFmt(s, o) => write!(f, "Bad Request: {}: {}", s, o),
             ApiError::NotFound(s) => write!(f, "Not Found: {}", s),
         }
     }
@@ -38,6 +40,11 @@ pub async fn error_handler(err: routerify::RouteError) -> Response<Body> {
         ApiError::BadRequest(s) => Response::builder()
             .status(StatusCode::BAD_REQUEST)
             .body(Body::from(s.to_string()))
+            .unwrap(),
+
+        ApiError::BadRequestFmt(s, o) => Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body(Body::from(format!("{}: {}", s, o)))
             .unwrap(),
         ApiError::NotFound(s) => Response::builder()
             .status(StatusCode::NOT_FOUND)
