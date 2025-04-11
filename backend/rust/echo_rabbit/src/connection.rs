@@ -6,6 +6,7 @@ use std::env;
 
 pub type RabbitConnection = Connection;
 
+#[derive(Default)]
 pub struct Config {
     host: String,
     port: u16,

@@ -33,7 +33,7 @@ impl Account {
 
 impl ModelBuilder for Account {
     fn table_name(&self) -> String {
-        return String::from("accounts");
+        String::from("accounts")
     }
 
     fn id(&self) -> String {
@@ -44,6 +44,6 @@ impl ModelBuilder for Account {
     }
 
     fn to_json(&self) -> serde_json::Value {
-        return json!(&self);
+        json!(&self)
     }
 }

@@ -17,20 +17,20 @@ impl<'a> AccountCache<'a> {
         Self { cache }
     }
 
-    pub async fn set(&self, key: &String, value: &String) -> Result<String, RedisError> {
+    pub async fn set(&self, key: &str, value: &String) -> Result<String, RedisError> {
         self.cache
-            .set(&vec![BASE_RATE_LIMIT, key].join("::"), value)
+            .set(&[BASE_RATE_LIMIT, key].join("::"), value)
             .await
     }
 
-    pub async fn get(&self, key: &String) -> Result<String, RedisError> {
-        self.cache.get(&vec![BASE_RATE_LIMIT, key].join("::")).await
+    pub async fn get(&self, key: &str) -> Result<String, RedisError> {
+        self.cache.get(&[BASE_RATE_LIMIT, key].join("::")).await
     }
 
-    pub async fn set_signup(&self, key: &String, value: &Account) -> Result<String, RedisError> {
+    pub async fn set_signup(&self, key: &str, value: &Account) -> Result<String, RedisError> {
         self.cache
             .set_exp(
-                &vec![BASE_SIGNUP, key].join("::"),
+                &[BASE_SIGNUP, key].join("::"),
                 &serde_json::to_string(value).unwrap(),
                 120,
             )
@@ -38,7 +38,7 @@ impl<'a> AccountCache<'a> {
     }
 
     pub async fn get_signup(&self, key: &str) -> Result<Account, String> {
-        let result = match self.cache.get(&vec![BASE_SIGNUP, key].join("::")).await {
+        let result = match self.cache.get(&[BASE_SIGNUP, key].join("::")).await {
             Ok(result) => result,
             Err(err) => return Err(err.to_string()),
         };

@@ -24,6 +24,7 @@ pub struct SignupVerification {
 }
 
 impl SignupVerification {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         id: Option<UUID>,
         code: String,
@@ -49,7 +50,7 @@ impl SignupVerification {
 
 impl ModelBuilder for SignupVerification {
     fn table_name(&self) -> String {
-        return String::from("signup_verification");
+        String::from("signup_verification")
     }
 
     fn id(&self) -> String {
@@ -60,6 +61,6 @@ impl ModelBuilder for SignupVerification {
     }
 
     fn to_json(&self) -> serde_json::Value {
-        return json!(&self);
+        json!(&self)
     }
 }

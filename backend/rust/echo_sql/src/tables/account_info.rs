@@ -3,18 +3,13 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(sqlx::Type, Serialize, Deserialize, Debug)]
+#[derive(sqlx::Type, Serialize, Deserialize, Debug, Default)]
 #[serde(rename_all = "lowercase")] // Optional: Match enum variants to lowercase strings for JSON
 #[sqlx(type_name = "account_type", rename_all = "lowercase")] // Match the PostgreSQL enum type name
 pub enum AccountType {
+    #[default]
     Basic,
     Managed,
-}
-
-impl Default for AccountType {
-    fn default() -> Self {
-        AccountType::Basic // Specify the default variant
-    }
 }
 
 #[derive(sqlx::FromRow, Serialize, Deserialize, Debug, Default)]
@@ -59,7 +54,7 @@ impl AccountInfo {
 
 impl ModelBuilder for AccountInfo {
     fn table_name(&self) -> String {
-        return String::from("account_info");
+        String::from("account_info")
     }
 
     fn id(&self) -> String {
@@ -70,6 +65,6 @@ impl ModelBuilder for AccountInfo {
     }
 
     fn to_json(&self) -> serde_json::Value {
-        return json!(&self);
+        json!(&self)
     }
 }

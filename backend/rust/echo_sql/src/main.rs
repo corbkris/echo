@@ -1,7 +1,7 @@
 use echo_sql::connection::Config;
-use tokio;
+use tokio::main;
 
-#[tokio::main]
+#[main]
 async fn main() {
     println!("cargo:rerun-if-changed=migrations");
     let config = Config::new();

@@ -2,6 +2,7 @@ use redis::{Client, RedisError};
 use std::env;
 pub type RedisClient = Client;
 
+#[derive(Default)]
 pub struct Config {
     host: String,
     port: u16,

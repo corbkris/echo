@@ -48,12 +48,12 @@ impl<'a> Cache<'a> {
             Ok(conn) => conn,
             Err(err) => return Err(err),
         };
-        let resp: String = match conn.set(&key, value).await {
+        let resp: String = match conn.set(key, value).await {
             Ok(resp) => resp,
             Err(err) => return Err(err),
         };
 
-        match conn.expire(&key, exp).await {
+        match conn.expire(key, exp).await {
             Ok(()) => Ok(resp),
             Err(err) => Err(err),
         }
@@ -65,12 +65,12 @@ impl<'a> Cache<'a> {
             Err(err) => return Err(err),
         };
 
-        let resp: String = match conn.incr(&key, 1).await {
+        let resp: String = match conn.incr(key, 1).await {
             Ok(resp) => resp,
             Err(err) => return Err(err),
         };
 
-        match conn.expire(&key, exp).await {
+        match conn.expire(key, exp).await {
             Ok(()) => Ok(resp),
             Err(err) => Err(err),
         }

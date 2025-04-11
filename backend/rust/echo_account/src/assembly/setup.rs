@@ -103,20 +103,20 @@ async fn setup() {
         .await;
     ECHO_BASIC_ACCOUNT_INFO_STORE
         .get_or_init(|| async {
-            BasicAccountInfoStore::new(new_basic_account_info_table(&ECHO_POSTGRES.get().unwrap()))
+            BasicAccountInfoStore::new(new_basic_account_info_table(ECHO_POSTGRES.get().unwrap()))
         })
         .await;
     ECHO_MANAGED_ACCOUNT_INFO_STORE
         .get_or_init(|| async {
             ManagedAccountInfoStore::new(new_managed_account_info_table(
-                &ECHO_POSTGRES.get().unwrap(),
+                ECHO_POSTGRES.get().unwrap(),
             ))
         })
         .await;
     ECHO_SIGNUP_VERIFICATION_STORE
         .get_or_init(|| async {
             SignupVerificationStore::new(new_signup_verification_table(
-                &ECHO_POSTGRES.get().unwrap(),
+                ECHO_POSTGRES.get().unwrap(),
             ))
         })
         .await;

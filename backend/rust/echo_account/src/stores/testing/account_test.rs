@@ -12,6 +12,19 @@ mod tests {
     };
 
     #[tokio::test]
+    async fn test_account_find_by_username_password() {
+        let common = Common::new().await;
+        let expected = common.test_create_account().await;
+        let actual = common
+            .db
+            .accounts
+            .find_by_username(&expected.username)
+            .await
+            .expect("failed to search by username");
+        assert_eq!(&expected.username, &actual.username);
+    }
+
+    #[tokio::test]
     async fn test_account_find_by_username() {
         let common = Common::new().await;
         common.test_create_account().await;
