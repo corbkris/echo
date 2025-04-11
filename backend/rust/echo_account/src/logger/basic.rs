@@ -10,5 +10,5 @@ pub fn register_subscriber(prefix: &str) -> WorkerGuard {
         .with(fmt::layer().with_writer(non_blocking).with_ansi(false))
         .init();
 
-    return _guard;
+    _guard
 }

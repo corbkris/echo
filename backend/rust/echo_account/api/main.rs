@@ -3,7 +3,9 @@ pub mod health;
 pub mod middleware;
 pub mod utility;
 
-use accounts::controller::{basic_signup, managed_signup, send_managed_signup_code, AccountState};
+use accounts::controller::{
+    basic_signup, login, managed_signup, send_managed_signup_code, AccountState,
+};
 use echo_account::assembly::setup::Common;
 use health::health_check;
 use hyper::Server;
@@ -31,6 +33,7 @@ async fn main() {
                     .post("/signup/basic", basic_signup)
                     .post("/signup/managed", send_managed_signup_code)
                     .post("/signup/managed/:code", managed_signup)
+                    .post("/login", login)
                     .err_handler(error_handler)
                     .build()
                     .unwrap(),

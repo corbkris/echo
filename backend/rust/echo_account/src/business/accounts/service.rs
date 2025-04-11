@@ -69,7 +69,7 @@ impl<'a> Service<'a> {
             error!("failed to insert basic_account_info, {}", err);
             return Err(ServiceError::Postgres(err));
         };
-        return Ok(basic_account_info.recovery_key);
+        Ok(basic_account_info.recovery_key)
     }
 
     pub async fn managed_signup(&self, req_id: Uuid, code: &str) -> Option<ServiceError> {
@@ -130,7 +130,7 @@ impl<'a> Service<'a> {
         None
     }
 
-    //returns request_id
+    //returns id for request
     pub async fn send_managed_signup_verification_code(
         &self,
         email: &str,

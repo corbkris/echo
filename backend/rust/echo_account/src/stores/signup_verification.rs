@@ -34,11 +34,8 @@ impl<'a> SignupVerificationStore<'a> {
             WHERE sv.id = $1
             AND sv.code = $2";
 
-        self.query(
-            query,
-            vec![Argument::Uuid(id), Argument::Str(code.to_string())],
-        )
-        .await
+        self.query(query, vec![Argument::Uuid(id), Argument::Str(code)])
+            .await
     }
 
     pub async fn find_by_id(&self, id: Uuid) -> Result<SignupVerification, PostgresError> {

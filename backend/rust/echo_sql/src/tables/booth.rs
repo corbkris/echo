@@ -29,7 +29,7 @@ impl Booth {
 
 impl ModelBuilder for Booth {
     fn table_name(&self) -> String {
-        return String::from("booths");
+        String::from("booths")
     }
 
     fn id(&self) -> String {
@@ -37,6 +37,6 @@ impl ModelBuilder for Booth {
     }
 
     fn to_json(&self) -> serde_json::Value {
-        return json!(&self);
+        json!(&self)
     }
 }

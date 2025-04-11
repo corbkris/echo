@@ -28,14 +28,13 @@ mod tests {
             Err(err) => panic!("faild to find signup_verification by id: {}", err),
         };
 
-        match common
+        if let Some(err) = common
             .services
             .account_service
             .managed_signup(req_id, &signup_verification.code)
             .await
         {
-            Some(err) => panic!("failed to managed signup: {}", err),
-            None => {}
+            panic!("failed to managed signup: {}", err)
         };
 
         let actual = match common
@@ -49,14 +48,13 @@ mod tests {
         };
         assert_eq!(&actual.username, &username);
 
-        match common
+        if let Some(err) = common
             .services
             .account_service
             .delete_signup_verification_by_req_id(req_id)
             .await
         {
-            Some(err) => panic!("failed to delete signup_verification: {}", err),
-            None => {}
+            panic!("failed to delete signup_verification: {}", err)
         };
 
         let deleted_verification = common.db.signup_verification.find_by_id(req_id).await;
