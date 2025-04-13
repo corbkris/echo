@@ -1,7 +1,7 @@
-use hmac::Hmac;
 use jwt::{Error, RegisteredClaims, SignWithKey, VerifyWithKey};
 use serde::{Deserialize, Serialize};
-use sha2::Sha256;
+
+use crate::config::Config;
 
 #[derive(Serialize, Deserialize)]
 pub struct AccountToken {
@@ -12,7 +12,8 @@ pub struct AccountToken {
     exp: usize,   // Expiration time in seconds since epoch
 }
 
-pub fn generate_auth_token(user_id: &str, key: Hmac<Sha256>) -> Result<String, Error> {
+pub fn generate_auth_token(user_id: &str) -> Result<String, Error> {
+    let config = Config::new();
     let claims = AccountToken {
         registered: RegisteredClaims {
             issuer: Some("echo.com".into()),
@@ -25,12 +26,13 @@ pub fn generate_auth_token(user_id: &str, key: Hmac<Sha256>) -> Result<String, E
     };
 
     // Sign the token with the custom claims
-    let signed_token = claims.sign_with_key(&key)?;
+    let signed_token = claims.sign_with_key(&config.secret_key)?;
 
     Ok(signed_token)
 }
 
-pub fn parse_auth_token(token: &str, key: Hmac<Sha256>) -> Result<AccountToken, Error> {
-    let claims: AccountToken = VerifyWithKey::verify_with_key(token, &key)?;
+pub fn parse_auth_token(token: &str) -> Result<AccountToken, Error> {
+    let config = Config::new();
+    let claims: AccountToken = VerifyWithKey::verify_with_key(token, &config.secret_key)?;
     Ok(claims)
 }

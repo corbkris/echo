@@ -1,5 +1,3 @@
-use std::char;
-
 use crate::business::account::Account;
 use crate::business::accounts::account_conv::marshal;
 use crate::caches::wrapper::EchoCache;
@@ -10,6 +8,7 @@ use crate::stores::basic_account_info::BasicAccountInfo;
 use crate::stores::signup_verification::SignupVerification;
 use crate::stores::wrapper::EchoDatabase;
 use crate::{business::errors::ServiceError, stores::managed_account_info::ManagedAccountInfo};
+use std::char;
 
 use bcrypt::{hash, DEFAULT_COST};
 use chrono::Utc;

@@ -109,6 +109,7 @@ impl<'a> DB<'a> {
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
     {
         let mut query = query_as::<Postgres, T>(query);
+
         for arg in args {
             match arg {
                 Argument::Int(i) => query = query.bind(i),

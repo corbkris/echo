@@ -1,4 +1,5 @@
 use crate::business::{account::Account, errors::ServiceError};
+use bcrypt::verify;
 
 use super::{account_conv::unmarshal, service::Service};
 
@@ -15,10 +16,18 @@ impl<'a> Service<'a> {
         username: &str,
         password: &str,
     ) -> Result<Account, ServiceError> {
+        let account_info = match self.db.account_info.find_by_username(username).await {
+            Ok(account_info) => account_info,
+            Err(err) => return Err(ServiceError::Postgres(err)),
+        };
+        if !verify(password, &account_info.password).unwrap() {
+            return Err(ServiceError::Internal("invalid password"));
+        };
+
         match self
             .db
             .accounts
-            .find_by_username_password(username, password)
+            .find_by_id_username(account_info.account_id, username)
             .await
         {
             Ok(account) => Ok(unmarshal(account)),
@@ -38,10 +47,18 @@ impl<'a> Service<'a> {
         email: &str,
         password: &str,
     ) -> Result<Account, ServiceError> {
+        let account_info = match self.db.account_info.find_by_email(email).await {
+            Ok(account_info) => account_info,
+            Err(err) => return Err(ServiceError::Postgres(err)),
+        };
+        if !verify(password, &account_info.password).unwrap() {
+            return Err(ServiceError::Internal("invalid password"));
+        };
+
         match self
             .db
             .accounts
-            .find_by_email_password(email, password)
+            .find_by_id_email(account_info.account_id, email)
             .await
         {
             Ok(account) => Ok(unmarshal(account)),

@@ -1,5 +1,8 @@
 use crate::accounts::{
-    acceptors::{login::marshal_login, signup::marshal_signup},
+    acceptors::{
+        login::marshal_login,
+        signup::{marshal_basic_signup, marshal_managed_signup},
+    },
     presenter::{SignupPresenter, SignupResponse},
 };
 use crate::{
@@ -14,9 +17,6 @@ use echo_sql::generic::PostgresError;
 use hyper::{header, Body, Request, Response, StatusCode};
 use routerify::prelude::*;
 use tracing::{error, instrument};
-
-use hmac::{Hmac, Mac};
-use sha2::Sha256;
 
 pub struct AccountState<'a> {
     pub account_service: &'a account_service<'a>,
@@ -79,9 +79,7 @@ pub async fn login<'a>(req: Request<Body>) -> Result<Response<Body>, ApiError<'a
         };
     };
 
-    let key: Hmac<Sha256> = Hmac::new_from_slice(b"secret_key").unwrap();
-
-    let token = match generate_auth_token(&account.id.unwrap().to_string(), key) {
+    let token = match generate_auth_token(&account.id.unwrap().to_string()) {
         Ok(token) => token,
         Err(err) => {
             error!("failed to generate token: {}", err);
@@ -101,7 +99,7 @@ pub async fn basic_signup<'a>(req: Request<Body>) -> Result<Response<Body>, ApiE
     let (parts, body) = req.into_parts();
 
     let state = parts.data::<AccountState>().unwrap();
-    let signup_data = marshal_signup(body).await?;
+    let signup_data = marshal_basic_signup(body).await?;
 
     let username = &signup_data.signup.username;
     let password = &signup_data.signup.password;
@@ -184,16 +182,11 @@ pub async fn send_managed_signup_code<'a>(
     let (parts, body) = req.into_parts();
 
     let state = parts.data::<AccountState>().unwrap();
-    let signup_data = marshal_signup(body).await?;
+    let signup_data = marshal_managed_signup(body).await?;
 
     let username = &signup_data.signup.username;
+    let email = &signup_data.signup.email;
     let password = &signup_data.signup.password;
-    let email = match &signup_data.signup.email {
-        Some(email) => email,
-        None => {
-            return Err(ApiError::BadRequest("email required"));
-        }
-    };
 
     match state
         .account_service
