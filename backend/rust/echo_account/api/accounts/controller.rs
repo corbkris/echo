@@ -36,7 +36,7 @@ pub async fn login<'a>(req: Request<Body>) -> Result<Response<Body>, ApiError<'a
     let login_data = marshal_login(body).await?;
 
     let username = &login_data.login.username;
-    let email = &login_data.login.username;
+    let email = &login_data.login.email;
     let password = &login_data.login.password;
 
     let account = &mut Account::default();
