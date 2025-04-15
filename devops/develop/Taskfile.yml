@@ -4,9 +4,14 @@ version: '3'
 
 vars:
   GO_DIR: backend/go
+  RUST_DIR: backend/rust
 
 tasks:
-  queues:
+  start_servers:
+    cmds:
+      - cd ../../{{.RUST_DIR}}/echo_account && cargo run --bin account_api
+    silent: false
+  start_queues:
     cmds:
       - cd ../../{{.GO_DIR}}/email && go run main.go
  #     - cd {{.GO_DIR}}/email && go run main.go
