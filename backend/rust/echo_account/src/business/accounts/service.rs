@@ -1,5 +1,3 @@
-use std::char;
-
 use crate::business::account::Account;
 use crate::business::accounts::account_conv::marshal;
 use crate::caches::wrapper::EchoCache;
@@ -10,6 +8,7 @@ use crate::stores::basic_account_info::BasicAccountInfo;
 use crate::stores::signup_verification::SignupVerification;
 use crate::stores::wrapper::EchoDatabase;
 use crate::{business::errors::ServiceError, stores::managed_account_info::ManagedAccountInfo};
+use std::char;
 
 use bcrypt::{hash, DEFAULT_COST};
 use chrono::Utc;
@@ -69,7 +68,7 @@ impl<'a> Service<'a> {
             error!("failed to insert basic_account_info, {}", err);
             return Err(ServiceError::Postgres(err));
         };
-        return Ok(basic_account_info.recovery_key);
+        Ok(basic_account_info.recovery_key)
     }
 
     pub async fn managed_signup(&self, req_id: Uuid, code: &str) -> Option<ServiceError> {
@@ -130,7 +129,7 @@ impl<'a> Service<'a> {
         None
     }
 
-    //returns request_id
+    //returns id for request
     pub async fn send_managed_signup_verification_code(
         &self,
         email: &str,

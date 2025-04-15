@@ -35,7 +35,7 @@ impl Product {
 
 impl ModelBuilder for Product {
     fn table_name(&self) -> String {
-        return String::from("products");
+        String::from("products")
     }
 
     fn id(&self) -> String {
@@ -43,6 +43,6 @@ impl ModelBuilder for Product {
     }
 
     fn to_json(&self) -> serde_json::Value {
-        return json!(&self);
+        json!(&self)
     }
 }

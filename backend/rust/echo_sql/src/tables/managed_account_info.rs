@@ -41,7 +41,7 @@ impl ManagedAccountInfo {
 
 impl ModelBuilder for ManagedAccountInfo {
     fn table_name(&self) -> String {
-        return String::from("managed_account_info");
+        String::from("managed_account_info")
     }
 
     fn id(&self) -> String {
@@ -49,6 +49,6 @@ impl ModelBuilder for ManagedAccountInfo {
     }
 
     fn to_json(&self) -> serde_json::Value {
-        return json!(&self);
+        json!(&self)
     }
 }

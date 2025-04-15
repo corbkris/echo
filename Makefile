@@ -2,7 +2,7 @@ DEVOPS_DIR = devops/develop
 
 #makefile is used for starting services
 
-.PHONY: up_dev down_dev logs_dev clean_postgres_dev clean_volumes_dev logs_service_dev up_server_dev up_watch_dev
+.PHONY: up_dev down_dev logs_dev clean_postgres_dev clean_volumes_dev logs_service_dev up_server_dev up_watch_dev up_queues_dev
 
 up_dev:
 	@cd $(DEVOPS_DIR) && podman compose up -d
@@ -10,8 +10,11 @@ up_dev:
 up_watch_dev:
 	@cd $(DEVOPS_DIR) && podman compose up
 
+up_queues_dev:
+	@cd $(DEVOPS_DIR) && go-task start_queues
+
 up_server_dev:
-	@cd $(DEVOPS_DIR) && go-task queues
+	@cd $(DEVOPS_DIR) && go-task start_servers
 
 down_dev:
 	@cd $(DEVOPS_DIR) && podman compose down

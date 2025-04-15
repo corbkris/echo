@@ -13,9 +13,9 @@ pub type PostgresQueryResult = PgQueryResult;
 pub type UUID = Uuid;
 
 #[derive(Debug)]
-pub enum Argument {
+pub enum Argument<'a> {
     Int(i32),
-    Str(String),
+    Str(&'a str),
     Float(f64),
     Bool(bool),
     Uuid(UUID),
@@ -104,11 +104,12 @@ impl<'a> DB<'a> {
     /// let mut args = vec![Argument::Int(5)];
     /// args.push(Argument::Bool(true));
     /// let result = self.query(query, arguments).await?;
-    pub async fn query<T>(&self, query: &str, args: Vec<Argument>) -> Result<T, PostgresError>
+    pub async fn query<T>(&self, query: &str, args: Vec<Argument<'a>>) -> Result<T, PostgresError>
     where
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,
     {
         let mut query = query_as::<Postgres, T>(query);
+
         for arg in args {
             match arg {
                 Argument::Int(i) => query = query.bind(i),
@@ -124,7 +125,7 @@ impl<'a> DB<'a> {
     pub async fn query_all<T>(
         &self,
         query: String,
-        args: Vec<Argument>,
+        args: Vec<Argument<'a>>,
     ) -> Result<Vec<T>, PostgresError>
     where
         T: ModelBuilder + Send + Unpin + for<'r> FromRow<'r, PgRow>,

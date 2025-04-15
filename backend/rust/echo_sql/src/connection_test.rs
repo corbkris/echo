@@ -12,7 +12,7 @@ mod tests {
     #[tokio::test]
     async fn test_migration() {
         let explicit_testing_flag = true;
-        if explicit_testing_flag == true {
+        if explicit_testing_flag {
             println!("cargo:rerun-if-changed=migrations");
             let config = Config::new();
             let conn = config.connect().await.unwrap();

@@ -51,7 +51,7 @@ impl<'a, T: ModelBuilder + Send + Sync + Unpin + for<'r> FromRow<'r, PgRow>> Bas
     }
 
     //use for complex queries that return single objects
-    pub async fn query(&self, query: &str, args: Vec<Argument>) -> Result<T, PostgresError> {
+    pub async fn query(&self, query: &str, args: Vec<Argument<'a>>) -> Result<T, PostgresError> {
         self.db.query(query, args).await
     }
 
@@ -59,7 +59,7 @@ impl<'a, T: ModelBuilder + Send + Sync + Unpin + for<'r> FromRow<'r, PgRow>> Bas
     pub async fn query_all(
         &self,
         query: String,
-        args: Vec<Argument>,
+        args: Vec<Argument<'a>>,
     ) -> Result<Vec<T>, PostgresError> {
         self.db.query_all(query, args).await
     }

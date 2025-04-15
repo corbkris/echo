@@ -12,6 +12,63 @@ mod tests {
     };
 
     #[tokio::test]
+    async fn test_account_find_by_id_email() {
+        let common = Common::new().await;
+        common.test_create_account().await;
+        let expected = common.test_create_account().await;
+        let account_info = &mut AccountInfo {
+            account_id: expected.id.unwrap(),
+            password: password::generate(true, true, true, 8),
+            account_type: AccountType::Basic,
+            ..Default::default()
+        };
+
+        match common.db.account_info.insert(account_info).await {
+            None => {}
+            Some(err) => panic!("error creating account_info: {}", err),
+        };
+        let email = &internet::username();
+
+        let managed_account_info = &mut ManagedAccountInfo {
+            id: account_info.id.unwrap(),
+            email: email.to_string(),
+            ..Default::default()
+        };
+
+        match common
+            .db
+            .managed_account_info
+            .insert(managed_account_info)
+            .await
+        {
+            None => {}
+            Some(err) => panic!("error creating managed_account_info: {}", err),
+        };
+
+        let actual = common
+            .db
+            .accounts
+            .find_by_id_email(expected.id.unwrap(), email)
+            .await
+            .unwrap_or_else(|e| panic!("failed to search by id email: {}", e));
+        assert_eq!(expected.id.unwrap(), actual.id.unwrap())
+    }
+
+    #[tokio::test]
+    async fn test_account_find_by_id_username() {
+        let common = Common::new().await;
+        common.test_create_account().await;
+        let expected = common.test_create_account().await;
+        let actual = common
+            .db
+            .accounts
+            .find_by_id_username(expected.id.unwrap(), &expected.username)
+            .await
+            .unwrap_or_else(|e| panic!("failed to search by id username: {}", e));
+        assert_eq!(expected.id.unwrap(), actual.id.unwrap())
+    }
+
+    #[tokio::test]
     async fn test_account_find_by_username() {
         let common = Common::new().await;
         common.test_create_account().await;

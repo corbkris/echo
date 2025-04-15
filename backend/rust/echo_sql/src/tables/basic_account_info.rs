@@ -33,7 +33,7 @@ impl BasicAccountInfo {
 
 impl ModelBuilder for BasicAccountInfo {
     fn table_name(&self) -> String {
-        return String::from("basic_account_info");
+        String::from("basic_account_info")
     }
 
     fn id(&self) -> String {
@@ -41,6 +41,6 @@ impl ModelBuilder for BasicAccountInfo {
     }
 
     fn to_json(&self) -> serde_json::Value {
-        return json!(&self);
+        json!(&self)
     }
 }

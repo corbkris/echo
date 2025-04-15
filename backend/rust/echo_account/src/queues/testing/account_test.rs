@@ -15,7 +15,7 @@ mod tests {
         let result = common
             .que
             .emails
-            .publish_email(&common.que.email_channel, &email)
+            .publish_email(common.que.email_channel, &email)
             .await;
         common
             .que

@@ -44,7 +44,7 @@ mod tests {
 
         match channel
             .exchange_declare(
-                ExchangeDeclareArguments::new(&exchange_name, &ExchangeType::Direct.to_string())
+                ExchangeDeclareArguments::new(exchange_name, &ExchangeType::Direct.to_string())
                     .durable(true)
                     .finish(),
             )
@@ -59,7 +59,7 @@ mod tests {
         };
 
         match channel
-            .queue_declare(QueueDeclareArguments::new(&que_name).durable(true).finish())
+            .queue_declare(QueueDeclareArguments::new(que_name).durable(true).finish())
             .await
         {
             Ok(_) => {
@@ -72,9 +72,9 @@ mod tests {
 
         match channel
             .queue_bind(QueueBindArguments::new(
-                &que_name,
-                &exchange_name,
-                &routing_key,
+                que_name,
+                exchange_name,
+                routing_key,
             ))
             .await
         {
@@ -95,7 +95,7 @@ mod tests {
             .basic_publish(
                 BasicProperties::default(),
                 payload.as_bytes().to_vec(),
-                BasicPublishArguments::new(&exchange_name, &routing_key),
+                BasicPublishArguments::new(exchange_name, routing_key),
             )
             .await
         {

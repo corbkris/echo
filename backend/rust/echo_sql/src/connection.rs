@@ -7,6 +7,7 @@ use std::env;
 
 pub type PostgresPool = PgPool;
 
+#[derive(Default)]
 pub struct Config {
     name: String,
     host: String,
