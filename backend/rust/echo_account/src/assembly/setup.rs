@@ -1,23 +1,11 @@
-use crate::business::{accounts::service::Service as AccountService, wrapper::Wrapper};
-use crate::queues::{email::EmailQue, wrapper::EchoQue};
-use crate::{
-    caches::{account::AccountCache, wrapper::EchoCache},
-    stores::account::new_account_table,
-};
-use crate::{
-    logger::basic::register_subscriber,
-    stores::{
-        account::AccountStore,
-        account_info::{new_account_info_table, AccountInfoStore},
-        basic_account_info::{new_basic_account_info_table, BasicAccountInfoStore},
-        managed_account_info::{new_managed_account_info_table, ManagedAccountInfoStore},
-        signup_verification::{new_signup_verification_table, SignupVerificationStore},
-        wrapper::EchoDatabase,
-    },
-};
+use crate::business::wrapper::Wrapper;
+use crate::caches::wrapper::EchoCache;
+use crate::logger::basic::register_subscriber;
+use crate::queues::wrapper::EchoQue;
+use crate::stores::wrapper::EchoDatabase;
 use echo_rabbit::{
     connection::{Config as RabbitConfig, RabbitConnection},
-    generic::{Que, RabbitChannel},
+    generic::Que,
 };
 use echo_redis::{
     connection::{Config as RedisConfig, RedisClient},
@@ -31,32 +19,66 @@ use tokio::sync::OnceCell;
 use tracing;
 use tracing_appender::non_blocking::WorkerGuard;
 
-pub static ECHO_POOL: OnceCell<PostgresPool> = OnceCell::const_new();
-pub static ECHO_POSTGRES: OnceCell<DB> = OnceCell::const_new();
-pub static ECHO_ACCOUNT_STORE: OnceCell<AccountStore> = OnceCell::const_new();
-pub static ECHO_ACCOUNT_INFO_STORE: OnceCell<AccountInfoStore> = OnceCell::const_new();
-pub static ECHO_BASIC_ACCOUNT_INFO_STORE: OnceCell<BasicAccountInfoStore> = OnceCell::const_new();
-pub static ECHO_MANAGED_ACCOUNT_INFO_STORE: OnceCell<ManagedAccountInfoStore> =
-    OnceCell::const_new();
-pub static ECHO_SIGNUP_VERIFICATION_STORE: OnceCell<SignupVerificationStore> =
-    OnceCell::const_new();
-pub static ECHO_DB: OnceCell<EchoDatabase> = OnceCell::const_new();
+pub static ECHO_DEPENDENCY: OnceCell<Dependency> = OnceCell::const_new();
+pub static ECHO_BUILDER: OnceCell<Buidler> = OnceCell::const_new();
+pub static ECHO_INFASTRUCTURE: OnceCell<Infastructure> = OnceCell::const_new();
+pub static ECHO_SERVICE: OnceCell<Wrapper> = OnceCell::const_new();
 
-pub static ECHO_CLIENT: OnceCell<RedisClient> = OnceCell::const_new();
-pub static ECHO_REDIS: OnceCell<Cache> = OnceCell::const_new();
-pub static ECHO_ACCOUNT_CACHE: OnceCell<AccountCache> = OnceCell::const_new();
-pub static ECHO_CACHE: OnceCell<EchoCache> = OnceCell::const_new();
+pub struct Dependency {
+    pub gaurd: Box<WorkerGuard>,
+    pub pool: Box<PostgresPool>,
+    pub client: Box<RedisClient>,
+    pub connection: Box<RabbitConnection>,
+}
 
-pub static ECHO_CONNECTION: OnceCell<RabbitConnection> = OnceCell::const_new();
-pub static ECHO_QUEUE: OnceCell<Que> = OnceCell::const_new();
-pub static ECHO_EMAIL_QUEUE: OnceCell<EmailQue> = OnceCell::const_new();
-pub static ECHO_EMAIL_CHANNEL: OnceCell<RabbitChannel> = OnceCell::const_new();
-pub static ECHO_QUEUES: OnceCell<EchoQue> = OnceCell::const_new();
+impl Dependency {
+    pub async fn new() -> Self {
+        let gaurd = Box::new(register_subscriber("rustaccount.log"));
+        let pool = Box::new(PostgresConfig::new().connect().await.unwrap());
+        let client = Box::new(RedisConfig::new().connect().unwrap());
+        let connection = Box::new(RabbitConfig::new().connect().await.unwrap());
+        Self {
+            gaurd,
+            pool,
+            client,
+            connection,
+        }
+    }
+}
 
-pub static ECHO_ACCOUNT_SERVICES: OnceCell<AccountService> = OnceCell::const_new();
-pub static ECHO_SERVICES: OnceCell<Wrapper> = OnceCell::const_new();
+pub struct Buidler<'a> {
+    pub db: Box<DB<'a>>,
+    pub cache: Box<Cache<'a>>,
+    pub que: Box<Que<'a>>,
+}
 
-pub static ECHO_GAURD: OnceCell<WorkerGuard> = OnceCell::const_new();
+impl<'a> Buidler<'a> {
+    pub fn new(dependencies: &'a Dependency) -> Self {
+        let db = Box::new(DB::new(&dependencies.pool));
+        let cache = Box::new(Cache::new(&dependencies.client));
+        let que = Box::new(Que::new(&dependencies.connection));
+        Self { db, cache, que }
+    }
+}
+
+pub struct Infastructure<'a> {
+    pub echo_db: Box<EchoDatabase<'a>>,
+    pub echo_cache: Box<EchoCache<'a>>,
+    pub echo_que: Box<EchoQue<'a>>,
+}
+
+impl<'a> Infastructure<'a> {
+    pub async fn new(builder: &'a Buidler<'a>) -> Self {
+        let echo_db = Box::new(EchoDatabase::new(&builder.db));
+        let echo_cache = Box::new(EchoCache::new(&builder.cache));
+        let echo_que = Box::new(EchoQue::new(&builder.que).await);
+        Self {
+            echo_db,
+            echo_cache,
+            echo_que,
+        }
+    }
+}
 
 pub struct Common<'a> {
     pub gaurd: &'a WorkerGuard,
@@ -68,123 +90,38 @@ pub struct Common<'a> {
 
 impl<'a> Common<'a> {
     pub async fn new() -> Self {
-        setup().await;
+        setup_v2().await;
         tracing::info!("services started");
         Self {
-            gaurd: ECHO_GAURD.get().unwrap(),
-            db: ECHO_DB.get().unwrap(),
-            cache: ECHO_CACHE.get().unwrap(),
-            que: ECHO_QUEUES.get().unwrap(),
-            services: ECHO_SERVICES.get().unwrap(),
+            gaurd: &ECHO_DEPENDENCY.get().unwrap().gaurd,
+            db: &ECHO_INFASTRUCTURE.get().unwrap().echo_db,
+            cache: &ECHO_INFASTRUCTURE.get().unwrap().echo_cache,
+            que: &ECHO_INFASTRUCTURE.get().unwrap().echo_que,
+            services: ECHO_SERVICE.get().unwrap(),
         }
     }
 }
 
-async fn setup() {
-    ECHO_GAURD
-        .get_or_init(|| async { register_subscriber("rustaccount.log") })
+async fn setup_v2() {
+    ECHO_DEPENDENCY
+        .get_or_init(|| async { Dependency::new().await })
         .await;
 
-    let postgres = PostgresConfig::new().connect().await.unwrap();
-    ECHO_POOL.get_or_init(|| async { postgres }).await;
-    ECHO_POSTGRES
-        .get_or_init(|| async { DB::new(ECHO_POOL.get().unwrap()) })
+    ECHO_BUILDER
+        .get_or_init(|| async { Buidler::new(ECHO_DEPENDENCY.get().unwrap()) })
         .await;
 
-    ECHO_ACCOUNT_STORE
-        .get_or_init(|| async {
-            AccountStore::new(new_account_table(ECHO_POSTGRES.get().unwrap()))
-        })
+    ECHO_INFASTRUCTURE
+        .get_or_init(|| async { Infastructure::new(ECHO_BUILDER.get().unwrap()).await })
         .await;
-    ECHO_ACCOUNT_INFO_STORE
+
+    ECHO_SERVICE
         .get_or_init(|| async {
-            AccountInfoStore::new(new_account_info_table(ECHO_POSTGRES.get().unwrap()))
-        })
-        .await;
-    ECHO_BASIC_ACCOUNT_INFO_STORE
-        .get_or_init(|| async {
-            BasicAccountInfoStore::new(new_basic_account_info_table(ECHO_POSTGRES.get().unwrap()))
-        })
-        .await;
-    ECHO_MANAGED_ACCOUNT_INFO_STORE
-        .get_or_init(|| async {
-            ManagedAccountInfoStore::new(new_managed_account_info_table(
-                ECHO_POSTGRES.get().unwrap(),
-            ))
-        })
-        .await;
-    ECHO_SIGNUP_VERIFICATION_STORE
-        .get_or_init(|| async {
-            SignupVerificationStore::new(new_signup_verification_table(
-                ECHO_POSTGRES.get().unwrap(),
-            ))
-        })
-        .await;
-    ECHO_DB
-        .get_or_init(|| async {
-            EchoDatabase::new(
-                ECHO_ACCOUNT_STORE.get().unwrap(),
-                ECHO_ACCOUNT_INFO_STORE.get().unwrap(),
-                ECHO_BASIC_ACCOUNT_INFO_STORE.get().unwrap(),
-                ECHO_MANAGED_ACCOUNT_INFO_STORE.get().unwrap(),
-                ECHO_SIGNUP_VERIFICATION_STORE.get().unwrap(),
+            Wrapper::new(
+                &ECHO_INFASTRUCTURE.get().unwrap().echo_db,
+                &ECHO_INFASTRUCTURE.get().unwrap().echo_cache,
+                &ECHO_INFASTRUCTURE.get().unwrap().echo_que,
             )
         })
-        .await;
-
-    let redis_client = RedisConfig::new().connect().unwrap();
-    ECHO_CLIENT
-        .get_or_init(|| async { redis_client.clone() })
-        .await;
-    ECHO_REDIS
-        .get_or_init(|| async { Cache::new(ECHO_CLIENT.get().unwrap()) })
-        .await;
-    ECHO_ACCOUNT_CACHE
-        .get_or_init(|| async { AccountCache::new(ECHO_REDIS.get().unwrap()) })
-        .await;
-    ECHO_CACHE
-        .get_or_init(|| async { EchoCache::new(ECHO_ACCOUNT_CACHE.get().unwrap()) })
-        .await;
-
-    let rabbit_connection = RabbitConfig::new().connect().await.unwrap();
-    ECHO_CONNECTION
-        .get_or_init(|| async { rabbit_connection })
-        .await;
-    ECHO_QUEUE
-        .get_or_init(|| async { Que::new(ECHO_CONNECTION.get().unwrap()) })
-        .await;
-    ECHO_EMAIL_QUEUE
-        .get_or_init(|| async { EmailQue::new(ECHO_QUEUE.get().unwrap()) })
-        .await;
-    ECHO_EMAIL_CHANNEL
-        .get_or_init(|| async {
-            ECHO_EMAIL_QUEUE
-                .get()
-                .unwrap()
-                .create_email_channel()
-                .await
-                .unwrap()
-        })
-        .await;
-    ECHO_QUEUES
-        .get_or_init(|| async {
-            EchoQue::new(
-                ECHO_EMAIL_QUEUE.get().unwrap(),
-                ECHO_EMAIL_CHANNEL.get().unwrap(),
-            )
-        })
-        .await;
-
-    ECHO_ACCOUNT_SERVICES
-        .get_or_init(|| async {
-            AccountService::new(
-                ECHO_DB.get().unwrap(),
-                ECHO_CACHE.get().unwrap(),
-                ECHO_QUEUES.get().unwrap(),
-            )
-        })
-        .await;
-    ECHO_SERVICES
-        .get_or_init(|| async { Wrapper::new(ECHO_ACCOUNT_SERVICES.get().unwrap()) })
         .await;
 }

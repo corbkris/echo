@@ -1,46 +1,34 @@
 use echo_sql::{
-    basic::{ComparisonOperator, ConditonalOperator},
-    generic::{PostgresError, PostgresQueryResult, DB},
-    tables::booth::Booth as ModelBooth,
+    generic::{Argument, PostgresError, DB},
+    impl_deref_store,
+    table::BaseTable,
+    tables::booth::Booth as TableBooth,
 };
-pub type Booth = ModelBooth;
 
+pub type Booth = TableBooth;
+
+impl_deref_store!(BoothStore, Booth);
 pub struct BoothStore<'a> {
-    db: &'a DB<'a>,
+    pub base_table: BaseTable<'a, Booth>,
+}
+
+pub fn new_booth_table<'a>(db: &'a DB) -> BaseTable<'a, Booth> {
+    BaseTable::<Booth>::new(db)
 }
 
 impl<'a> BoothStore<'a> {
-    pub fn new(db: &'a DB) -> Self {
-        Self { db }
+    pub fn new(base_table: BaseTable<'a, Booth>) -> Self {
+        Self { base_table }
     }
 
-    pub async fn insert(&self, booth: &mut Booth) -> Option<PostgresError> {
-        self.db.insert(booth).await
-    }
+    pub async fn find_by_email(&self, email: &str) -> Result<Booth, PostgresError> {
+        let query = "
+            SELECT a.*
+            FROM accounts a
+            INNER JOIN account_info ai ON ai.account_id = a.id
+            INNER JOIN managed_account_info mai ON mai.id = ai.id
+            WHERE mai.email = $1 LIMIT 1;";
 
-    pub async fn update(&self, booth: &mut Booth) -> Option<PostgresError> {
-        self.db.update(booth).await
-    }
-
-    pub async fn delete(&self, booth: &Booth) -> Result<PostgresQueryResult, PostgresError> {
-        self.db.delete(booth).await
-    }
-
-    pub async fn basic_search(
-        &self,
-        booth: &Booth,
-        comparison: ComparisonOperator,
-        conditional: ConditonalOperator,
-    ) -> Result<Vec<Booth>, PostgresError> {
-        self.db.search_all(booth, comparison, conditional).await
-    }
-
-    pub async fn basic_search_single(
-        &self,
-        booth: &Booth,
-        comparison: ComparisonOperator,
-        conditional: ConditonalOperator,
-    ) -> Result<Booth, PostgresError> {
-        self.db.search(booth, comparison, conditional).await
+        self.query(query, vec![Argument::Str(email)]).await
     }
 }

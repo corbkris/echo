@@ -16,10 +16,7 @@ path = "cmd/main.rs"
 [dependencies]
 echo_sql = {path = "../echo_sql"}
 
-refinery = { version = "0.8", features = ["postgres"] }
-
-
 tokio = { version = "1", features = ["full"] }
 
-sqlx = { version = "0.7", features = ["runtime-tokio", "postgres", "uuid", "macros", "json" ]}
+uuid = {version = "1.8.0", features = ["v4"]}
 
