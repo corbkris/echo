@@ -1,5 +1,5 @@
 use echo_sql::{
-    generic::DB, impl_deref_store, table::BaseTable,
+    connection::PostgresPool, generic::DB, impl_deref_store, table::BaseTable,
     tables::managed_account_info::ManagedAccountInfo as TableManagedAccountInfo,
 };
 
@@ -10,12 +10,16 @@ pub struct ManagedAccountInfoStore<'a> {
     pub base_table: BaseTable<'a, ManagedAccountInfo>,
 }
 
-pub fn new_managed_account_info_table<'a>(db: &'a DB) -> BaseTable<'a, ManagedAccountInfo> {
-    BaseTable::<ManagedAccountInfo>::new(db)
+pub fn new_managed_account_info_table<'a>(
+    pool: &'a PostgresPool,
+) -> BaseTable<'a, ManagedAccountInfo> {
+    BaseTable::<ManagedAccountInfo>::new(DB::new(pool))
 }
 
 impl<'a> ManagedAccountInfoStore<'a> {
-    pub fn new(base_table: BaseTable<'a, ManagedAccountInfo>) -> Self {
-        Self { base_table }
+    pub fn new(pool: &'a PostgresPool) -> Self {
+        Self {
+            base_table: new_managed_account_info_table(pool),
+        }
     }
 }

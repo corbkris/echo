@@ -1,4 +1,5 @@
 use echo_rabbit::{
+    connection::RabbitConnection,
     generic::{Que, RabbitChannel, RabbitError},
     models::emails::EmailSignup as QueEmailSignup,
 };
@@ -10,12 +11,14 @@ const EMAIL_EXCHANGE: &str = "my_exchange";
 const EMAIL_ROUTING_KEY: &str = "email_key";
 
 pub struct EmailQue<'a> {
-    que: &'a Que<'a>,
+    que: Que<'a>,
 }
 
 impl<'a> EmailQue<'a> {
-    pub fn new(que: &'a Que<'a>) -> Self {
-        Self { que }
+    pub fn new(connection: &'a RabbitConnection) -> Self {
+        Self {
+            que: Que::new(connection),
+        }
     }
 
     pub async fn create_email_channel(&self) -> Result<RabbitChannel, RabbitError> {

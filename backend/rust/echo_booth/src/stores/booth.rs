@@ -1,4 +1,5 @@
 use echo_sql::{
+    connection::PostgresPool,
     generic::{Argument, PostgresError, DB},
     impl_deref_store,
     table::BaseTable,
@@ -12,8 +13,8 @@ pub struct BoothStore<'a> {
     pub base_table: BaseTable<'a, Booth>,
 }
 
-pub fn new_booth_table<'a>(db: &'a DB) -> BaseTable<'a, Booth> {
-    BaseTable::<Booth>::new(db)
+pub fn new_booth_table<'a>(pool: &'a PostgresPool) -> BaseTable<'a, Booth> {
+    BaseTable::<Booth>::new(DB::new(pool))
 }
 
 impl<'a> BoothStore<'a> {

@@ -1,14 +1,14 @@
-use echo_redis::generic::Cache;
+use echo_redis::connection::RedisClient;
 
 use crate::caches::account::AccountCache;
 
 pub struct EchoCache<'a> {
-    pub accounts: Box<AccountCache<'a>>,
+    pub accounts: AccountCache<'a>,
 }
 
 impl<'a> EchoCache<'a> {
-    pub fn new(cache: &'a Cache) -> Self {
-        let accounts = Box::new(AccountCache::new(cache));
+    pub fn new(client: &'a RedisClient) -> Self {
+        let accounts = AccountCache::new(client);
         Self { accounts }
     }
 }

@@ -1,16 +1,16 @@
-use echo_rabbit::generic::{Que, RabbitChannel};
+use echo_rabbit::{connection::RabbitConnection, generic::RabbitChannel};
 
 use crate::queues::email::EmailQue;
 
 pub struct EchoQue<'a> {
-    pub emails: Box<EmailQue<'a>>,
-    pub email_channel: Box<RabbitChannel>,
+    pub emails: EmailQue<'a>,
+    pub email_channel: RabbitChannel,
 }
 
 impl<'a> EchoQue<'a> {
-    pub async fn new(que: &'a Que<'a>) -> Self {
-        let emails = Box::new(EmailQue::new(que));
-        let email_channel = Box::new(emails.create_email_channel().await.unwrap());
+    pub async fn new(connection: &'a RabbitConnection) -> Self {
+        let emails = EmailQue::new(connection);
+        let email_channel = emails.create_email_channel().await.unwrap();
 
         Self {
             emails,
