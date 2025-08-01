@@ -1,4 +1,5 @@
 use echo_sql::{
+    connection::PostgresPool,
     generic::{Argument, PostgresError, DB},
     impl_deref_store,
     table::BaseTable,
@@ -12,13 +13,15 @@ pub struct AccountInfoStore<'a> {
     pub base_table: BaseTable<'a, AccountInfo>,
 }
 
-pub fn new_account_info_table<'a>(db: &'a DB) -> BaseTable<'a, AccountInfo> {
-    BaseTable::<AccountInfo>::new(db)
+pub fn new_account_info_table<'a>(pool: &'a PostgresPool) -> BaseTable<'a, AccountInfo> {
+    BaseTable::<AccountInfo>::new(DB::new(pool))
 }
 
 impl<'a> AccountInfoStore<'a> {
-    pub fn new(base_table: BaseTable<'a, AccountInfo>) -> Self {
-        Self { base_table }
+    pub fn new(pool: &'a PostgresPool) -> Self {
+        Self {
+            base_table: new_account_info_table(pool),
+        }
     }
 
     pub async fn find_by_username(&self, username: &str) -> Result<AccountInfo, PostgresError> {

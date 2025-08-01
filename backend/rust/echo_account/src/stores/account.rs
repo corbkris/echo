@@ -1,5 +1,6 @@
 use echo_sql::{
     basic::{ComparisonOperator, ConditonalOperator},
+    connection::PostgresPool,
     generic::{Argument, PostgresError, DB},
     impl_deref_store,
     table::BaseTable,
@@ -14,13 +15,15 @@ pub struct AccountStore<'a> {
     pub base_table: BaseTable<'a, Account>,
 }
 
-pub fn new_account_table<'a>(db: &'a DB) -> BaseTable<'a, Account> {
-    BaseTable::<Account>::new(db)
+pub fn new_account_table<'a>(pool: &'a PostgresPool) -> BaseTable<'a, Account> {
+    BaseTable::<Account>::new(DB::new(pool))
 }
 
 impl<'a> AccountStore<'a> {
-    pub fn new(base_table: BaseTable<'a, Account>) -> Self {
-        Self { base_table }
+    pub fn new(pool: &'a PostgresPool) -> Self {
+        Self {
+            base_table: new_account_table(pool),
+        }
     }
 
     pub async fn find_by_id_username(

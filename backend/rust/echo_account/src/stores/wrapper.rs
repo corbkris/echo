@@ -1,3 +1,5 @@
+use echo_sql::connection::PostgresPool;
+
 use crate::stores::{
     account::AccountStore, account_info::AccountInfoStore,
     basic_account_info::BasicAccountInfoStore, managed_account_info::ManagedAccountInfoStore,
@@ -5,21 +7,21 @@ use crate::stores::{
 };
 
 pub struct EchoDatabase<'a> {
-    pub accounts: &'a AccountStore<'a>,
-    pub account_info: &'a AccountInfoStore<'a>,
-    pub basic_account_info: &'a BasicAccountInfoStore<'a>,
-    pub managed_account_info: &'a ManagedAccountInfoStore<'a>,
-    pub signup_verification: &'a SignupVerificationStore<'a>,
+    pub accounts: AccountStore<'a>,
+    pub account_info: AccountInfoStore<'a>,
+    pub basic_account_info: BasicAccountInfoStore<'a>,
+    pub managed_account_info: ManagedAccountInfoStore<'a>,
+    pub signup_verification: SignupVerificationStore<'a>,
 }
 
 impl<'a> EchoDatabase<'a> {
-    pub fn new(
-        accounts: &'a AccountStore<'a>,
-        account_info: &'a AccountInfoStore<'a>,
-        basic_account_info: &'a BasicAccountInfoStore<'a>,
-        managed_account_info: &'a ManagedAccountInfoStore<'a>,
-        signup_verification: &'a SignupVerificationStore<'a>,
-    ) -> Self {
+    pub fn new(pool: &'a PostgresPool) -> Self {
+        let accounts = AccountStore::new(pool);
+        let account_info = AccountInfoStore::new(pool);
+        let basic_account_info = BasicAccountInfoStore::new(pool);
+        let managed_account_info = ManagedAccountInfoStore::new(pool);
+        let signup_verification = SignupVerificationStore::new(pool);
+
         Self {
             accounts,
             account_info,

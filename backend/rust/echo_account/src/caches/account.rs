@@ -1,4 +1,5 @@
 use echo_redis::{
+    connection::RedisClient,
     generic::{Cache, RedisError},
     models::account::Account as CacheAccount,
 };
@@ -9,12 +10,14 @@ const BASE_SIGNUP: &str = "signup:";
 pub type Account = CacheAccount;
 
 pub struct AccountCache<'a> {
-    cache: &'a Cache<'a>,
+    cache: Cache<'a>,
 }
 
 impl<'a> AccountCache<'a> {
-    pub fn new(cache: &'a Cache) -> Self {
-        Self { cache }
+    pub fn new(client: &'a RedisClient) -> Self {
+        Self {
+            cache: Cache::new(client),
+        }
     }
 
     pub async fn set(&self, key: &str, value: &String) -> Result<String, RedisError> {

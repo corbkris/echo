@@ -1,5 +1,6 @@
 use echo_sql::{
     basic::{ComparisonOperator, ConditonalOperator},
+    connection::PostgresPool,
     generic::{Argument, PostgresError, DB},
     impl_deref_store,
     table::BaseTable,
@@ -14,13 +15,17 @@ pub struct SignupVerificationStore<'a> {
     pub base_table: BaseTable<'a, SignupVerification>,
 }
 
-pub fn new_signup_verification_table<'a>(db: &'a DB) -> BaseTable<'a, SignupVerification> {
-    BaseTable::<SignupVerification>::new(db)
+pub fn new_signup_verification_table<'a>(
+    pool: &'a PostgresPool,
+) -> BaseTable<'a, SignupVerification> {
+    BaseTable::<SignupVerification>::new(DB::new(pool))
 }
 
 impl<'a> SignupVerificationStore<'a> {
-    pub fn new(base_table: BaseTable<'a, SignupVerification>) -> Self {
-        Self { base_table }
+    pub fn new(pool: &'a PostgresPool) -> Self {
+        Self {
+            base_table: new_signup_verification_table(pool),
+        }
     }
 
     pub async fn find_by_id_code(

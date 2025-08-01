@@ -173,7 +173,7 @@ impl<'a> Service<'a> {
             .que
             .emails
             .publish_email(
-                self.que.email_channel,
+                &self.que.email_channel,
                 &EmailSigup::new(email.to_string(), code.to_string()),
             )
             .await

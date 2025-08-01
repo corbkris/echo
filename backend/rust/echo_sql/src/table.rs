@@ -6,12 +6,12 @@ use crate::{
 use sqlx::{postgres::PgRow, FromRow};
 
 pub struct BaseTable<'a, T: ModelBuilder + Send + Sync> {
-    db: &'a DB<'a>,
+    db: DB<'a>,
     _marker: std::marker::PhantomData<T>,
 }
 
 impl<'a, T: ModelBuilder + Send + Sync + Unpin + for<'r> FromRow<'r, PgRow>> BaseTable<'a, T> {
-    pub fn new(db: &'a DB) -> Self {
+    pub fn new(db: DB<'a>) -> Self {
         Self {
             db,
             _marker: std::marker::PhantomData,

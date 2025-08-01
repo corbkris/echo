@@ -29,7 +29,7 @@ async fn main() {
             .scope(
                 "/accounts",
                 Router::builder()
-                    .data(AccountState::new(common.services.account_service))
+                    .data(AccountState::new(&common.services.account_service))
                     .post("/signup/basic", basic_signup)
                     .post("/signup/managed", send_managed_signup_code)
                     .post("/signup/managed/:code", managed_signup)
